@@ -66,8 +66,10 @@ namespace qlm
     class Pixel;
 
     template<ImageFormat frmt, pixel_t T>
-    void ApplyToChannels(auto&& func, Pixel<frmt, T>& result, const Pixel<frmt, T>& in1, const Pixel<frmt, T>& in2)
+    Pixel<frmt, T> ApplyToChannels(auto&& func, const Pixel<frmt, T>& in1, const Pixel<frmt, T>& in2)
     {
+        Pixel<frmt, T> result;
+
         if constexpr (frmt == ImageFormat::GRAY)
         {
             result.v = func(in1.v, in2.v);
@@ -94,11 +96,15 @@ namespace qlm
             result.s = func(in1.s, in2.s);
             result.a = func(in1.a, in2.a);
         }
+
+        return result;
     }
 
-     template<ImageFormat frmt, pixel_t T>
-    void ApplyToChannels(auto&& func, Pixel<frmt, T>& result, const Pixel<frmt, T>& in)
+    template<ImageFormat frmt, pixel_t T>
+    Pixel<frmt, T> ApplyToChannels(auto&& func, const Pixel<frmt, T>& in)
     {
+        Pixel<frmt, T> result;
+
         if constexpr (frmt == ImageFormat::GRAY)
         {
             result.v = func(in.v);
@@ -125,6 +131,51 @@ namespace qlm
             result.s = func(in.s);
             result.a = func(in.a);
         }
+
+        return result;
+    }
+
+    // Common arithmetic operators
+    template<qlm::ImageFormat frmt, qlm::pixel_t T>
+    qlm::Pixel<frmt, T> operator+(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
+    {
+        const auto add_pix = [](const auto a, const auto b) 
+        {
+            constexpr T min_value = std::numeric_limits<T>::lowest();
+            constexpr T max_value = std::numeric_limits<T>::max();
+
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T>>(a + b, min_value, max_value));
+        };
+
+        return ApplyToChannels(add_pix, in1, in2);
+    }
+
+    template<qlm::ImageFormat frmt, qlm::pixel_t T>
+    qlm::Pixel<frmt, T> operator-(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
+    {
+        const auto sub_pix = [](const auto a, const auto b) 
+        {
+            constexpr T min_value = std::numeric_limits<T>::lowest();
+            constexpr T max_value = std::numeric_limits<T>::max();
+
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T>>(a - b, min_value, max_value));
+        };
+
+        return ApplyToChannels(sub_pix, in1, in2);
+    }
+
+    template<qlm::ImageFormat frmt, qlm::pixel_t T>
+    qlm::Pixel<frmt, T> operator*(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
+    {
+        const auto mul_pix = [](const auto a, const auto b) 
+        {
+            constexpr T min_value = std::numeric_limits<T>::lowest();
+            constexpr T max_value = std::numeric_limits<T>::max();
+
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T>>(a * b, min_value, max_value));
+        };
+
+        return ApplyToChannels(mul_pix, in1, in2);
     }
 
     // pixels operations
@@ -132,29 +183,24 @@ namespace qlm
     template<qlm::ImageFormat frmt, qlm::pixel_t T, qlm::arithmetic_t T2>
     qlm::Pixel<frmt, T> operator*(const qlm::Pixel<frmt, T>& pix, const T2 num)
     {
-        qlm::Pixel<frmt, T> result;
-
         auto mul_func = [num](const auto a) {
             return static_cast<T>(std::clamp<qlm::cast_t<T, T2>>(a * num, std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max()));
         };
 
-        ApplyToChannels(mul_func, result, pix);
-        return result;
+        return ApplyToChannels(mul_func, pix);
     }
 
     // absolute difference
     template<qlm::ImageFormat frmt, qlm::pixel_t T>
     qlm::Pixel<frmt, T> AbsDiff(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
     {
-        qlm::Pixel<frmt, T> result;
         using type_t = qlm::wider_t<qlm::signed_t<T>>;
 
         auto diff_func = [](const auto a, const auto b) {
             return static_cast<T>(std::clamp<type_t>(std::abs(a - b), std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max()));
         };
 
-        ApplyToChannels(diff_func, result, in1, in2);
-        return result;
+        return ApplyToChannels(diff_func, in1, in2);
     }
 
     // blend pixels
