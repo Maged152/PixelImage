@@ -178,6 +178,20 @@ namespace qlm
         return ApplyToChannels(mul_pix, in1, in2);
     }
 
+    template<qlm::ImageFormat frmt, qlm::pixel_t T>
+    qlm::Pixel<frmt, T> operator/(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
+    {
+        const auto mul_pix = [](const auto a, const auto b) 
+        {
+            constexpr T min_value = std::numeric_limits<T>::lowest();
+            constexpr T max_value = std::numeric_limits<T>::max();
+
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T>>(a / b, min_value, max_value));
+        };
+
+        return ApplyToChannels(mul_pix, in1, in2);
+    }
+
     // pixels operations
     // Pixel * num 
     template<qlm::ImageFormat frmt, qlm::pixel_t T, qlm::arithmetic_t T2>
