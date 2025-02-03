@@ -12,8 +12,8 @@ namespace qlm
         T v, a;
 
     private:
-        constexpr T min_value = std::numeric_limits<T>::lowest();
-        constexpr T max_value = std::numeric_limits<T>::max();
+        static constexpr T min_value = std::numeric_limits<T>::lowest();
+        static constexpr T max_value = std::numeric_limits<T>::max();
 
     public:
         Pixel() : v(0), a(max_value) {}
@@ -73,6 +73,17 @@ namespace qlm
         }
 
     public:
+        void Set(const T gray)
+        {
+            v = gray;
+        }
+
+        void Set(const T gray, const T alpha)
+        {
+            v = gray;
+            a = alpha;
+        }
+
         template<arithmetic_t T2>
         void MAC(const Pixel& other, const T2 coeff)
         {

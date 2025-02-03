@@ -1,6 +1,7 @@
 #include "image.hpp"
 #include "stb/stb_image_write.h"
 #include <fstream>
+#include <iostream>
 
 namespace qlm
 {

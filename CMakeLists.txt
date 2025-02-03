@@ -33,7 +33,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:${INSTALL_INC_DIR}>
 )
 
-add_library(NameSpace::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+add_library(qlm::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 # Check if examples are enabled
 if(PixelImage_BUILD_EXAMPLES)

@@ -9,9 +9,10 @@ namespace qlm
     {
     public:
         T r, g, b, a;
+        
     private:
-        const T min_value = std::numeric_limits<T>::lowest();
-        const T max_value = std::numeric_limits<T>::max();
+        static constexpr T min_value = std::numeric_limits<T>::lowest();
+        static constexpr T max_value = std::numeric_limits<T>::max();
 
     public:
         Pixel() : r(0), g(0), b(0), a(max_value) {}

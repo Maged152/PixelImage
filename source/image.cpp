@@ -5,7 +5,7 @@ namespace qlm
 {
 	// create image
 	template<ImageFormat frmt, pixel_t T>
-	void Image<frmt, T>::create(size_t img_width, size_t img_height, Pixel<frmt, T> pix, size_t img_stride)
+	void Image<frmt, T>::create(int img_width, int img_height, Pixel<frmt, T> pix, int img_stride)
 	{
 		width = img_width;
 		height = img_height;
@@ -22,7 +22,7 @@ namespace qlm
 	}
 
 	template<ImageFormat frmt, pixel_t T>
-	void Image<frmt, T>::create(size_t img_width, size_t img_height, size_t img_stride)
+	void Image<frmt, T>::create(int img_width, int img_height, int img_stride)
 	{
 		width = img_width;
 		height = img_height;
@@ -76,44 +76,44 @@ namespace qlm
 
 
 	// explicit instantiation
-	template void Image<ImageFormat::GRAY, uint8_t>::create(size_t, size_t, Pixel<ImageFormat::GRAY, uint8_t>, size_t);
-	template void Image<ImageFormat::GRAY, int16_t>::create(size_t, size_t, Pixel<ImageFormat::GRAY, int16_t>, size_t);
-	template void Image<ImageFormat::GRAY, int>::create(size_t, size_t, Pixel<ImageFormat::GRAY, int>, size_t);
-	template void Image<ImageFormat::GRAY, float>::create(size_t, size_t, Pixel<ImageFormat::GRAY, float>, size_t);
+	template void Image<ImageFormat::GRAY, uint8_t>::create(int, int, Pixel<ImageFormat::GRAY, uint8_t>, int);
+	template void Image<ImageFormat::GRAY, int16_t>::create(int, int, Pixel<ImageFormat::GRAY, int16_t>, int);
+	template void Image<ImageFormat::GRAY, int>::create(int, int, Pixel<ImageFormat::GRAY, int>, int);
+	template void Image<ImageFormat::GRAY, float>::create(int, int, Pixel<ImageFormat::GRAY, float>, int);
 
-	template void Image<ImageFormat::RGB, uint8_t>::create(size_t, size_t, Pixel<ImageFormat::RGB, uint8_t>, size_t);
-	template void Image<ImageFormat::RGB, int16_t>::create(size_t, size_t, Pixel<ImageFormat::RGB, int16_t>, size_t);
-	template void Image<ImageFormat::RGB, float>::create(size_t, size_t, Pixel<ImageFormat::RGB, float>, size_t);
+	template void Image<ImageFormat::RGB, uint8_t>::create(int, int, Pixel<ImageFormat::RGB, uint8_t>, int);
+	template void Image<ImageFormat::RGB, int16_t>::create(int, int, Pixel<ImageFormat::RGB, int16_t>, int);
+	template void Image<ImageFormat::RGB, float>::create(int, int, Pixel<ImageFormat::RGB, float>, int);
 
-	template void Image<ImageFormat::HLS, uint8_t>::create(size_t, size_t, Pixel<ImageFormat::HLS, uint8_t>, size_t);
-	template void Image<ImageFormat::HLS, int16_t>::create(size_t, size_t, Pixel<ImageFormat::HLS, int16_t>, size_t);
-	template void Image<ImageFormat::HLS, float>::create(size_t, size_t, Pixel<ImageFormat::HLS, float>, size_t);
+	template void Image<ImageFormat::HLS, uint8_t>::create(int, int, Pixel<ImageFormat::HLS, uint8_t>, int);
+	template void Image<ImageFormat::HLS, int16_t>::create(int, int, Pixel<ImageFormat::HLS, int16_t>, int);
+	template void Image<ImageFormat::HLS, float>::create(int, int, Pixel<ImageFormat::HLS, float>, int);
 
-	template void Image<ImageFormat::HSV, uint8_t>::create(size_t, size_t, Pixel<ImageFormat::HSV, uint8_t>, size_t);
-	template void Image<ImageFormat::HSV, int16_t>::create(size_t, size_t, Pixel<ImageFormat::HSV, int16_t>, size_t);
-	template void Image<ImageFormat::HSV, float>::create(size_t, size_t, Pixel<ImageFormat::HSV, float>, size_t);
+	template void Image<ImageFormat::HSV, uint8_t>::create(int, int, Pixel<ImageFormat::HSV, uint8_t>, int);
+	template void Image<ImageFormat::HSV, int16_t>::create(int, int, Pixel<ImageFormat::HSV, int16_t>, int);
+	template void Image<ImageFormat::HSV, float>::create(int, int, Pixel<ImageFormat::HSV, float>, int);
 
-	template void Image<ImageFormat::YCrCb, uint8_t>::create(size_t, size_t, Pixel<ImageFormat::YCrCb, uint8_t>, size_t);
-	template void Image<ImageFormat::YCrCb, int16_t>::create(size_t, size_t, Pixel<ImageFormat::YCrCb, int16_t>, size_t);
-	template void Image<ImageFormat::YCrCb, float>::create(size_t, size_t, Pixel<ImageFormat::YCrCb, float>, size_t);
+	template void Image<ImageFormat::YCrCb, uint8_t>::create(int, int, Pixel<ImageFormat::YCrCb, uint8_t>, int);
+	template void Image<ImageFormat::YCrCb, int16_t>::create(int, int, Pixel<ImageFormat::YCrCb, int16_t>, int);
+	template void Image<ImageFormat::YCrCb, float>::create(int, int, Pixel<ImageFormat::YCrCb, float>, int);
 
 	// -------------------------------------------------------------------------------------------------------------
-	template void Image<ImageFormat::GRAY, uint8_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::GRAY, int16_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::GRAY, int32_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::GRAY, float>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::RGB, uint8_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::RGB, int16_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::RGB, float>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::HLS, uint8_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::HLS, int16_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::HLS, float>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::HSV, uint8_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::HSV, int16_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::HSV, float>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::YCrCb, uint8_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::YCrCb, int16_t>::create(size_t, size_t, size_t);
-	template void Image<ImageFormat::YCrCb, float>::create(size_t, size_t, size_t);
+	template void Image<ImageFormat::GRAY, uint8_t>::create(int, int, int);
+	template void Image<ImageFormat::GRAY, int16_t>::create(int, int, int);
+	template void Image<ImageFormat::GRAY, int32_t>::create(int, int, int);
+	template void Image<ImageFormat::GRAY, float>::create(int, int, int);
+	template void Image<ImageFormat::RGB, uint8_t>::create(int, int, int);
+	template void Image<ImageFormat::RGB, int16_t>::create(int, int, int);
+	template void Image<ImageFormat::RGB, float>::create(int, int, int);
+	template void Image<ImageFormat::HLS, uint8_t>::create(int, int, int);
+	template void Image<ImageFormat::HLS, int16_t>::create(int, int, int);
+	template void Image<ImageFormat::HLS, float>::create(int, int, int);
+	template void Image<ImageFormat::HSV, uint8_t>::create(int, int, int);
+	template void Image<ImageFormat::HSV, int16_t>::create(int, int, int);
+	template void Image<ImageFormat::HSV, float>::create(int, int, int);
+	template void Image<ImageFormat::YCrCb, uint8_t>::create(int, int, int);
+	template void Image<ImageFormat::YCrCb, int16_t>::create(int, int, int);
+	template void Image<ImageFormat::YCrCb, float>::create(int, int, int);
 	// ------------------------------------------------------------------------------------------------------------
 	template Pixel<ImageFormat::GRAY, uint8_t> Image<ImageFormat::GRAY, uint8_t>::GetPixel(int, int, const BorderMode<ImageFormat::GRAY, uint8_t>&) const;
 	template Pixel<ImageFormat::GRAY, int16_t> Image<ImageFormat::GRAY, int16_t>::GetPixel(int, int, const BorderMode<ImageFormat::GRAY, int16_t>&) const;

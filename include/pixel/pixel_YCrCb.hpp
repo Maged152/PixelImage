@@ -11,8 +11,8 @@ namespace qlm
         T y, cr, cb, a;
 
     private:
-        const T min_value = std::numeric_limits<T>::lowest();
-        const T max_value = std::numeric_limits<T>::max();
+        static constexpr T min_value = std::numeric_limits<T>::lowest();
+        static constexpr T max_value = std::numeric_limits<T>::max();
 
     public:
         Pixel() : y(0), cr(0), cb(0), a(max_value) {}
