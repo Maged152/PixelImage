@@ -25,7 +25,7 @@ The `ImageFormat` enum specifies the supported image formats.
 - `HSV`: HSV format.
 - `HLS`: HLS format.
 
-### BorderMode Struct
+### BorderMode<frmt, T> Struct
 The `BorderMode` struct specifies the border handling mode for an image.
 
 #### Public Variables
@@ -42,10 +42,10 @@ The `BorderMode` struct specifies the border handling mode for an image.
 - `cast_t<T, T2>`: Type trait to upgrade a type for casting.
 
 ## Pixel<frmt, T> Class
+The `Pixel` class represents a single pixel in an image. It is specialized for different image formats (`GRAY`, `RGB`, `HLS`, `HSV`, `YCrCb`).
 
 ### Common Functions
-- `ApplyToChannels`: Applies a function to the channels of a pixel.
-- `operator+`, `operator-`, `operator*`, `operator/`: Arithmetic operators for pixels.
+- `Arithmetic operators`: `+`, `-`, `*` and `/`
 - `AbsDiff`: Computes the absolute difference between two pixels.
 - `BlendColors`: Blends two colors based on a weight.
 - `L2Norm`: Computes the L2 norm (Euclidean distance) between two pixels.
@@ -187,6 +187,7 @@ The `Pixel` class template specialization for the `YCrCb` format.
 - `uint64_t SquaredEuclideanDistance(const Pixel& other)`: Computes the squared Euclidean distance to another pixel.
 
 ## Image<frmt, T> Class
+The `Image` class represents an image which is a 2d array of `Pixel` and provides methods for loading, saving, and manipulating image data.
 
 ### Public Variables
 - `int width`: The width of the image.
