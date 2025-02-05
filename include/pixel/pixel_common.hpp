@@ -65,8 +65,8 @@ namespace qlm
     template<ImageFormat frmt, pixel_t T>
     class Pixel;
 
-    template<ImageFormat frmt, pixel_t T>
-    Pixel<frmt, T> ApplyToChannels(auto&& func, const Pixel<frmt, T>& in1, const Pixel<frmt, T>& in2)
+    template<ImageFormat frmt, pixel_t T, pixel_t T2>
+    Pixel<frmt, T> ApplyToChannels(auto&& func, const Pixel<frmt, T>& in1, const Pixel<frmt, T2>& in2)
     {
         Pixel<frmt, T> result;
 
@@ -136,60 +136,60 @@ namespace qlm
     }
 
     // Common arithmetic operators
-    template<qlm::ImageFormat frmt, qlm::pixel_t T>
-    qlm::Pixel<frmt, T> operator+(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
+    template<qlm::ImageFormat frmt, qlm::pixel_t T, qlm::pixel_t T2>
+    qlm::Pixel<frmt, T> operator+(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T2>& in2)
     {
         const auto add_pix = [](const auto a, const auto b) 
         {
             constexpr T min_value = std::numeric_limits<T>::lowest();
             constexpr T max_value = std::numeric_limits<T>::max();
 
-            return static_cast<T>(std::clamp<qlm::cast_t<T, T>>(a + b, min_value, max_value));
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T2>>(a + b, min_value, max_value));
         };
 
         return ApplyToChannels(add_pix, in1, in2);
     }
 
-    template<qlm::ImageFormat frmt, qlm::pixel_t T>
-    qlm::Pixel<frmt, T> operator-(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
+    template<qlm::ImageFormat frmt, qlm::pixel_t T, qlm::pixel_t T2>
+    qlm::Pixel<frmt, T> operator-(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T2>& in2)
     {
         const auto sub_pix = [](const auto a, const auto b) 
         {
             constexpr T min_value = std::numeric_limits<T>::lowest();
             constexpr T max_value = std::numeric_limits<T>::max();
 
-            return static_cast<T>(std::clamp<qlm::cast_t<T, T>>(a - b, min_value, max_value));
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T2>>(a - b, min_value, max_value));
         };
 
         return ApplyToChannels(sub_pix, in1, in2);
     }
 
-    template<qlm::ImageFormat frmt, qlm::pixel_t T>
-    qlm::Pixel<frmt, T> operator*(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
+    template<qlm::ImageFormat frmt, qlm::pixel_t T, qlm::pixel_t T2>
+    qlm::Pixel<frmt, T> operator*(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T2>& in2)
     {
         const auto mul_pix = [](const auto a, const auto b) 
         {
             constexpr T min_value = std::numeric_limits<T>::lowest();
             constexpr T max_value = std::numeric_limits<T>::max();
 
-            return static_cast<T>(std::clamp<qlm::cast_t<T, T>>(a * b, min_value, max_value));
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T2>>(a * b, min_value, max_value));
         };
 
         return ApplyToChannels(mul_pix, in1, in2);
     }
 
-    template<qlm::ImageFormat frmt, qlm::pixel_t T>
-    qlm::Pixel<frmt, T> operator/(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
+    template<qlm::ImageFormat frmt, qlm::pixel_t T, qlm::pixel_t T2>
+    qlm::Pixel<frmt, T> operator/(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T2>& in2)
     {
-        const auto mul_pix = [](const auto a, const auto b) 
+        const auto div_pix = [](const auto a, const auto b) 
         {
             constexpr T min_value = std::numeric_limits<T>::lowest();
             constexpr T max_value = std::numeric_limits<T>::max();
 
-            return static_cast<T>(std::clamp<qlm::cast_t<T, T>>(a / b, min_value, max_value));
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T2>>(a / b, min_value, max_value));
         };
 
-        return ApplyToChannels(mul_pix, in1, in2);
+        return ApplyToChannels(div_pix, in1, in2);
     }
 
     // pixels operations
