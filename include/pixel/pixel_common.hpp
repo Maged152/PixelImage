@@ -204,6 +204,28 @@ namespace qlm
         return ApplyToChannels(mul_func, pix);
     }
 
+    // Pixel + num 
+    template<qlm::ImageFormat frmt, qlm::pixel_t T, qlm::arithmetic_t T2>
+    qlm::Pixel<frmt, T> operator+(const qlm::Pixel<frmt, T>& pix, const T2 num)
+    {
+        auto mul_func = [num](const auto a) {
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T2>>(a + num, std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max()));
+        };
+
+        return ApplyToChannels(mul_func, pix);
+    }
+
+    // Pixel / num 
+    template<qlm::ImageFormat frmt, qlm::pixel_t T, qlm::arithmetic_t T2>
+    qlm::Pixel<frmt, T> operator/(const qlm::Pixel<frmt, T>& pix, const T2 num)
+    {
+        auto mul_func = [num](const auto a) {
+            return static_cast<T>(std::clamp<qlm::cast_t<T, T2>>(a / num, std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max()));
+        };
+
+        return ApplyToChannels(mul_func, pix);
+    }
+
     // absolute difference
     template<qlm::ImageFormat frmt, qlm::pixel_t T>
     qlm::Pixel<frmt, T> AbsDiff(const qlm::Pixel<frmt, T>& in1, const qlm::Pixel<frmt, T>& in2)
