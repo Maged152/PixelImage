@@ -24,7 +24,7 @@ namespace qlm
         const int comp = (frmt == ImageFormat::GRAY) ? 1 : 3;
         const int final_comp = alpha ? comp + 1 : comp;
 
-		T* img_data = new T[width * height * comp];
+		T* img_data = new T[width * height * final_comp];
 
 		// copy pixel data to the output buffer
 		for (int y = 0; y < height; y++)
@@ -32,7 +32,7 @@ namespace qlm
 			for (int x = 0; x < width; x++)
 			{
 				const Pixel<frmt, T> pix = GetPixel(x, y);
-				const int idx = y * width * final_comp + x * final_comp;
+				const int idx = (y * width + x) * final_comp;
 
 				if constexpr (frmt == ImageFormat::GRAY)
 				{
@@ -92,7 +92,6 @@ namespace qlm
 		else
 		{
 			std::cerr << "Error: Unsupported file extension '" << ext << "'." << std::endl;
-            return false;
 		}
 
 		delete[] img_data;
