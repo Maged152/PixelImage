@@ -34,7 +34,7 @@ namespace qlm
 		stride = width;
 		num_of_channels = n;
 
-		if ((frmt == ImageFormat::GRAY && num_of_channels > 2) || (frmt == ImageFormat::RGB && num_of_channels < 3))
+		if ((frmt == ImageFormat::GRAY && num_of_channels < 1) || (frmt == ImageFormat::RGB && num_of_channels < 3))
 		{
 			std::cerr << "Error loading image file " << file_name 
 					<< ": Number of channels (" << n << ") is not compatible with the image format (" 
@@ -54,7 +54,7 @@ namespace qlm
 			{
 				// Grayscale image: use the first channel and optional alpha channel
 				const T gray = img_data[i];
-				const T alpha = (n == 2) ? img_data[i + 1] : std::numeric_limits<T>::max(); // Use max value if no alpha channel
+				const T alpha = (n == 2 || n == 4) ? img_data[i + n - 1] : std::numeric_limits<T>::max(); // Use max value if no alpha channel
 
 				data[idx].Set(gray, alpha);
 			}
