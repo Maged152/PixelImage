@@ -206,8 +206,8 @@ The `Image` class represents an image which is a 2d array of `Pixel` and provide
 - `Image<frmt, T>& operator=(Image<frmt, T>&& other) noexcept`: Move assignment operator.
 
 ### Public Methods
-- `void create(int img_width, int img_height, int img_stride = 0)`: Creates an image with the specified width, height, and stride.
-- `void create(int img_width, int img_height, Pixel<frmt, T> pix, int img_stride = 0)`: Creates an image with the specified width, height, pixel value, and stride.
+- `void Create(int img_width, int img_height, int img_stride = 0)`: Creates an image with the specified width, height, and stride.
+- `void Create(int img_width, int img_height, Pixel<frmt, T> pix, int img_stride = 0)`: Creates an image with the specified width, height, pixel value, and stride.
 - `void SetPixel(int x, int y, const Pixel<frmt, T>& pix)`: Sets the pixel at the specified (x, y) coordinates.
 - `void SetPixel(int i, const Pixel<frmt, T>& pix)`: Sets the pixel at the specified index.
 - `Pixel<frmt, T> GetPixel(int x, int y) const`: Gets the pixel at the specified (x, y) coordinates.

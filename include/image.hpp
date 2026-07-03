@@ -2,7 +2,7 @@
 
 #include "pixel.hpp"
 #include <string>
-
+#include <algorithm>
 
 namespace qlm
 {
@@ -149,9 +149,35 @@ namespace qlm
 		}
 
 	public:
-		void create(int img_width, int img_height, int img_stride = 0);
+		void Create(int img_width, int img_height, int img_stride = 0)
+		{
+			width = img_width;
+			height = img_height;
+			stride = img_stride == 0 ? width : img_stride;
 
-		void create(int img_width, int img_height, Pixel<frmt, T> pix, int img_stride = 0);
+			SetNumChannels();
+
+			if (data != nullptr)
+				delete[] data;
+
+			data = new Pixel<frmt, T>[stride * height];
+		}
+
+		void Create(int img_width, int img_height, Pixel<frmt, T> pix, int img_stride = 0)
+		{
+			width = img_width;
+			height = img_height;
+			stride = img_stride == 0 ? width : img_stride;
+
+			SetNumChannels();
+
+			if (data != nullptr)
+				delete[] data;
+
+			data = new Pixel<frmt, T>[stride * height];
+
+			std::fill_n(data, stride * height, pix);
+		}
 		
 		void SetPixel(int x, int y, const Pixel<frmt, T> &pix)
 		{
@@ -203,7 +229,41 @@ namespace qlm
 			}
 		}
 
-		Pixel<frmt, T> GetPixel(int x, int y, const BorderMode<frmt, T>& border_mode) const;
+		Pixel<frmt, T> GetPixel(int x, int y, const BorderMode<frmt, T>& border_mode) const
+		{
+			if (x >= 0 && x < width && y >= 0 && y < height)
+			{
+				// Not a border pixel
+				return this->GetPixel(x, y);
+			}
+			else
+			{
+				// A border pixel
+				switch (border_mode.border_type)
+				{
+					case qlm::BorderType::BORDER_CONSTANT:
+					{
+						return border_mode.border_pixel;
+					}
+					case qlm::BorderType::BORDER_REPLICATE:
+					{
+						int x_idx = std::clamp(x, 0, width - 1);
+						int y_idx = std::clamp(y, 0, height - 1);
+						return this->GetPixel(x_idx, y_idx);
+					}
+					case qlm::BorderType::BORDER_REFLECT:
+					{
+						int x_idx = this->ReflectBorderIndex(x, width);
+						int y_idx = this->ReflectBorderIndex(y, height);
+						return this->GetPixel(x_idx, y_idx);
+					}
+					default:
+					{
+						return Pixel<frmt, T>{};
+					}
+				}
+			}
+		}
 
 		bool LoadFromFile(const std::string& file_name);
 
