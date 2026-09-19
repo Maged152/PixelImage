@@ -41,6 +41,27 @@ The `BorderMode` struct specifies the border handling mode for an image.
 - `signed_t<T>`: Type trait to make a type signed.
 - `cast_t<T, T2>`: Type trait to upgrade a type for casting.
 
+## RandomGenerator<T> Class
+The `RandomGenerator` class produces pseudo-random values of type `T`, seeded by the user and bounded to a value range. It is used by `RandomPixel` and `Image::RandomInit`. Copying a generator reproduces the exact same sequence of values.
+
+### Constructors
+- `explicit RandomGenerator(uint32_t seed, T min_val = std::numeric_limits<T>::lowest(), T max_val = std::numeric_limits<T>::max())`: Creates a deterministically seeded generator producing values in `[min_val, max_val]` (the bounds are swapped if `min_val > max_val`).
+- `RandomGenerator()`: Creates a non-deterministically seeded generator (seeded from `std::random_device`) using the full range of `T`.
+
+### Public Methods
+- `void Reseed(uint32_t seed)`: Re-seeds the generator; the same seed and range reproduce the same sequence.
+- `void SetRange(T min_val, T max_val)`: Sets the value range (the arguments are swapped if reversed).
+- `T Min() const`: Returns the lower bound of the range.
+- `T Max() const`: Returns the upper bound of the range.
+- `T Next()`: Returns the next random value (a uniform integer distribution for integral types and a uniform real distribution for floating-point types).
+- `T operator()()`: Same as `Next()`, so the generator can be used as a standard generator functor (e.g. with `std::generate_n`).
+
+## PixelRandom Functions
+Free functions related to random pixel generation.
+
+- `T RandomHue(RandomGenerator<T>& gen)`: Returns a random hue normalized to `[0, 360)` for integral and floating-point pixel types.
+- `Pixel<frmt, T> RandomPixel(RandomGenerator<T>& gen, bool random_alpha = false)`: Creates a pixel whose color channels are random values taken from `gen`. The alpha channel stays opaque unless `random_alpha` is true.
+
 ## Pixel<frmt, T> Class
 The `Pixel` class represents a single pixel in an image. It is specialized for different image formats (`GRAY`, `RGB`, `HLS`, `HSV`, `YCrCb`).
 
@@ -208,6 +229,9 @@ The `Image` class represents an image which is a 2d array of `Pixel` and provide
 ### Public Methods
 - `void Create(int img_width, int img_height, int img_stride = 0)`: Creates an image with the specified width, height, and stride.
 - `void Create(int img_width, int img_height, Pixel<frmt, T> pix, int img_stride = 0)`: Creates an image with the specified width, height, pixel value, and stride.
+- `void RandomInit(RandomGenerator<T>& gen, bool random_alpha = false)`: Fills the image with random pixels taken from `gen` (the image must be created first). The alpha channel stays opaque unless `random_alpha` is true.
+- `void RandomInit(uint32_t seed, bool random_alpha = false)`: Same as above with a deterministically seeded generator; the same seed produces the same image.
+- `void RandomInit()`: Same as above with a non-deterministically seeded generator (seeded from `std::random_device`).
 - `void SetPixel(int x, int y, const Pixel<frmt, T>& pix)`: Sets the pixel at the specified (x, y) coordinates.
 - `void SetPixel(int i, const Pixel<frmt, T>& pix)`: Sets the pixel at the specified index.
 - `Pixel<frmt, T> GetPixel(int x, int y) const`: Gets the pixel at the specified (x, y) coordinates.

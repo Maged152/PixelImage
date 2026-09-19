@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pixel.hpp"
+#include "random_generator.hpp"
 #include <string>
 #include <algorithm>
 
@@ -272,6 +273,34 @@ namespace qlm
 		int NumerOfChannels() const
 		{
 			return num_of_channels;
+		}
+
+		void RandomInit(RandomGenerator<T>& gen, bool random_alpha = false)
+		{
+			// The image must be created first; only fill an already allocated image
+			if (data == nullptr || width <= 0 || height <= 0)
+				return;
+
+			for (int y = 0; y < height; y++)
+			{
+				for (int x = 0; x < width; x++)
+				{
+					const auto random_pixel = RandomPixel<frmt, T>(gen, random_alpha);
+					SetPixel(x, y, random_pixel);
+				}
+			}
+		}
+
+		void RandomInit(const uint32_t seed, bool random_alpha = false)
+		{
+			RandomGenerator<T> gen(seed);
+			RandomInit(gen, random_alpha);
+		}
+
+		void RandomInit()
+		{
+			RandomGenerator<T> gen;
+			RandomInit(gen, false);
 		}
 	};	
 }

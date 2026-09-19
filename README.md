@@ -8,6 +8,8 @@ PixelImage is a C++ wrapper for the [stb](https://github.com/nothings/stb) libra
 
 - `Image Formats`: Supports grayscale, RGB, and other formats.
 
+- `Random Initialization`: Seedable random image and pixel generation (`RandomGenerator`, `RandomPixel`, `Image::RandomInit`).
+
 - `Alpha Channel Handling`: Automatically detects and handles alpha channels.
 
 - `Simple API`: Designed for ease of use while maintaining flexibility.
