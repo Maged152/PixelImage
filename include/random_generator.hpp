@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <cstdint>
 #include <type_traits>
-#include "random_generator.hpp"
 #include <cmath>
+#include "pixel.hpp"
 #include "pixel/pixel_common.hpp"
 
 namespace qlm
