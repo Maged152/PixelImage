@@ -93,6 +93,17 @@ Supported extensions: `bmp`, `png`, `jpg` / `jpeg`, `pgm` (1-component only). Se
 
 See [Random generation](random_generator.md).
 
+### Video I/O
+
+Videos are read and written frame by frame as Motion-JPEG, so no video codec is involved.
+
+| | `GRAY` | `RGB` |
+|---|---|---|
+| `uint8_t` | ✅ | ✅ |
+| other `T` | ❌ link error | ❌ link error |
+
+See [Video](video.md) for the container details and [example3](../examples/example3.cpp) for a slideshow built from images.
+
 ## Documentation
 
 | Page | Covers |
@@ -102,3 +113,4 @@ See [Random generation](random_generator.md).
 | [Pixel formats](pixel_formats.md) | The five `Pixel` specializations: channels, constructors, `Set` overloads |
 | [Image](image.md) | Memory model, constructors, pixel access, `Copy`, border handling, `LoadFromFile` / `SaveToFile` |
 | [Random generation](random_generator.md) | `RandomGenerator`, `RandomPixel`, `Image::RandomInit`, determinism |
+| [Video](video.md) | `VideoReader`, `VideoWriter`, the Motion-JPEG MP4 container, frame timing |

@@ -18,7 +18,7 @@ set(INSTALL_RUN_DIR "dll")
 set(INSTALL_CFG_DIR "cmake")
 
 # Source files
-file(GLOB_RECURSE SOURCES source/*.cpp)
+file(GLOB_RECURSE SOURCES source/*.cpp source/*.c)
 
 # Create the static library
 add_library(${PROJECT_NAME} STATIC ${SOURCES})

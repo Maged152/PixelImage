@@ -9,10 +9,10 @@ foreach(EXAMPLE_SOURCE ${EXAMPLE_SOURCES})
                           CXX_STANDARD 20
                           CXX_EXTENSIONS OFF)
     
-    add_custom_target(Example_${EXAMPLE_NAME}
+    add_custom_target(run_${EXAMPLE_NAME}
         COMMAND ${CMAKE_COMMAND} -E env
                 ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE_NAME}
-        # DEPENDS ${EXAMPLE_NAME}
+        DEPENDS ${EXAMPLE_NAME}
         COMMENT "Running ${EXAMPLE_NAME} example"
     )
 endforeach()
