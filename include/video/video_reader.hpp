@@ -1,6 +1,7 @@
 #pragma once
 
 #include "image.hpp"
+#include "video_common.hpp"
 #include <string>
 #include <memory>
 

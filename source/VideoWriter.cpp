@@ -1,4 +1,4 @@
-#include "video_writer.hpp"
+#include "video.hpp"
 #include "minih264/minih264e.h"
 #include "minimp4/minimp4.h"
 #include "stb/stb_image_write.h"

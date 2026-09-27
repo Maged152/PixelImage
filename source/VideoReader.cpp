@@ -1,4 +1,4 @@
-#include "video_reader.hpp"
+#include "video.hpp"
 #include "stb/stb_image.h"
 #include "minimp4/minimp4.h"
 
