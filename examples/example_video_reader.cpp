@@ -14,7 +14,6 @@ int main()
 	if (!reader.LoadFromFile(input_video))
 	{
 		std::cerr << "Failed to open input video: " << input_video << "\n";
-		std::cerr << "Note: VideoReader requires a Motion-JPEG MP4 (VideoFormat::MP4_MJPEG).\n";
 		return -1;
 	}
 

@@ -721,6 +721,11 @@ namespace qlm
 		return impl != nullptr ? impl->quality : 0;
 	}
 
+	VideoFormat VideoWriter::Format() const
+	{
+		return impl != nullptr ? impl->format : VideoFormat::MP4_MJPEG;
+	}
+
 	int VideoWriter::FrameCount() const
 	{
 		return impl != nullptr ? impl->frames_written : 0;

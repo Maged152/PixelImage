@@ -64,6 +64,7 @@ namespace qlm
 		int Height() const;
 		int FrameRate() const;
 		int Quality() const;
+		VideoFormat Format() const;
 
 		// Number of frames written so far.
 		int FrameCount() const;

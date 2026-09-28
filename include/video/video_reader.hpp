@@ -9,10 +9,9 @@ namespace qlm
 {
 	// Reads a video file one frame at a time.
 	//
-	// The MP4 container is demuxed by minimp4, then every sample is decoded by
-	// stb_image, so the video track must hold complete images built from a format stb
-	// understands (Motion-JPEG). Because each frame is independent, frames can be read
-	// in any order. See doc/video.md for the details.
+	// The MP4 container is demuxed by minimp4. Motion-JPEG tracks are decoded by
+	// stb_image, while H.264 (AVC) tracks are decoded by edge264. See doc/video.md
+	// for the details.
 	//
 	// A VideoReader owns the demuxer and the mapped file data, so it is movable but
 	// not copyable.
@@ -22,7 +21,7 @@ namespace qlm
 		struct Impl;
 		std::unique_ptr<Impl> impl;
 
-		// Fetches the sample, decodes it with stb_image and stores the pixels in Impl.
+		// Fetches the sample, decodes it and stores the pixels in Impl.
 		bool DecodeFrame(int frame_index);
 
 	public:
@@ -38,6 +37,9 @@ namespace qlm
 		bool LoadFromFile(const std::string& file_name);
 		void Close();
 		bool IsOpen() const;
+
+		// Video encoding format (VideoFormat::MP4_MJPEG or VideoFormat::MP4_H264).
+		VideoFormat Format() const;
 
 		// Dimensions of the video track, taken from the first frame.
 		int Width() const;
