@@ -42,9 +42,9 @@ int main()
 	while (reader.ReadFrame(frame))
 	{
 		// Add fixed value to each pixel in the frame with clamping to 255
-		for (int y = 0; y < frame.height; ++y)
+		for (int y = 0; y < frame.Height(); ++y)
 		{
-			for (int x = 0; x < frame.width; ++x)
+			for (int x = 0; x < frame.Width(); ++x)
 			{
 				auto pixel = frame.GetPixel(x, y);
 

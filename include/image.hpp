@@ -21,6 +21,9 @@ namespace qlm
 		Pixel<frmt, T> border_pixel{};
 	};
 
+	// Forward declaration of video writer class
+    class VideoWriter;
+
 	template<ImageFormat frmt, pixel_t T>
 	class Image
 	{
@@ -28,7 +31,6 @@ namespace qlm
 		int num_of_channels;
 		Pixel<frmt, T>* data;
 
-	public:
 		int width;
 		int stride;
 		int height;
@@ -302,5 +304,22 @@ namespace qlm
 			RandomGenerator<T> gen;
 			RandomInit(gen, false);
 		}
+	
+		int Width() const
+		{
+			return width;
+		}
+
+		int Height() const
+		{
+			return height;
+		}
+
+		int Stride() const
+		{
+			return stride;
+		}
+
+		friend class VideoWriter;
 	};	
 }

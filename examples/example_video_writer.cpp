@@ -41,12 +41,12 @@ int main()
 	}
 
 	// 2. Frames of a video should have one size
-	const int video_width = image0.width;
-	const int video_height = image0.height;
+	const int video_width = image0.Width();
+	const int video_height = image0.Height();
 
-	if (image1.width != video_width || image1.height != video_height ||
-		image2.width != video_width || image2.height != video_height ||
-		image3.width != video_width || image3.height != video_height)
+	if (image1.Width() != video_width || image1.Height() != video_height ||
+		image2.Width() != video_width || image2.Height() != video_height ||
+		image3.Width() != video_width || image3.Height() != video_height)
 	{
 		std::cout << "All images must have the same size\n";
 		return -1;

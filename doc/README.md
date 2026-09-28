@@ -29,9 +29,9 @@ int main()
     }
 
     // Invert every pixel
-    for (int y = 0; y < img.height; y++)
+    for (int y = 0; y < img.Height(); y++)
     {
-        for (int x = 0; x < img.width; x++)
+        for (int x = 0; x < img.Width(); x++)
         {
             const qlm::Pixel<qlm::ImageFormat::RGB, uint8_t> pix = img.GetPixel(x, y);
             img.SetPixel(x, y, qlm::Pixel<qlm::ImageFormat::RGB, uint8_t>(

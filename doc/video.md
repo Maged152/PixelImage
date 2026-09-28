@@ -4,7 +4,7 @@ Two classes read and write video files, one frame at a time:
 
 | Component | Role |
 |---|---|
-| [`VideoReader`](#videoreader) | Demuxes an MP4 container (minimp4) and decodes every frame with `stb_image` |
+| [`VideoReader`](#videoreader) | Demuxes an MP4 container (minimp4) and decodes every frame with `stb_image` (Motion-JPEG) or `edge264` (H.264) |
 | [`VideoWriter`](#videowriter) | Encodes every frame (Motion-JPEG via `stb_image_write` or H.264 via `minih264`) and muxes an MP4 container |
 
 The default track format is **Motion-JPEG**, where every frame is an independent JPEG image. That keeps the reader and the writer small — and makes every frame a random access point — at the cost of file size.
@@ -20,7 +20,7 @@ Sources: [`include/video_reader.hpp`](../include/video_reader.hpp) · [`include/
 | | Reading | Writing |
 |---|---|---|
 | Container | MP4 / ISO base media (ISO/IEC 14496-12) | MP4 / ISO base media |
-| Codec | any single JPEG sample, `jpeg` sample entry | `jpeg` (Motion-JPEG, default) or `avc1` (H.264) |
+| Codec | `jpeg` (Motion-JPEG) or `avc1` (H.264) | `jpeg` (Motion-JPEG, default) or `avc1` (H.264) |
 | Frame formats | `GRAY` or `RGB` with `uint8_t` (1, 2, 3 or 4 channel samples) | `GRAY` or `RGB` with `uint8_t` |
 | Audio | ignored | not written |
 | Extensions | `.mp4`, `.m4v`, and any other MP4 file | whatever name is passed to `Open` (`.mp4` is conventional) |
@@ -29,9 +29,7 @@ When writing Motion-JPEG (`VideoFormat::MP4_MJPEG`), every frame is stored as a 
 
 When writing H.264 (`VideoFormat::MP4_H264`), input frames are converted to BT.601 planar I420 and encoded with a single-threaded H.264 encoder into Annex-B NAL units, packaged into standard `avc1` / `avcC` tracks. Frame dimensions for H.264 **must be multiples of 16** (macroblock constraint).
 
-Reading supports both one-component (grayscale) and three-component JPEG samples; a grayscale sample read into an `RGB` image is replicated over the three channels.
-
-> **Note** — `VideoReader` decodes frames using `stb_image`, which supports JPEG images only. Files written with `VideoFormat::MP4_H264` cannot be decoded by `VideoReader`; use an external player (e.g. VLC, MPV) or standard media decoders to view them.
+Reading supports both Motion-JPEG (one-component grayscale and three-component JPEG samples) and H.264 (8-bit 4:2:0 streams decoded via `edge264`). A grayscale sample read into an `RGB` image is replicated over the three channels.
 
 ## `VideoWriter`
 
@@ -60,6 +58,7 @@ namespace qlm
         int Height() const;
         int FrameRate() const;
         int Quality() const;
+        VideoFormat Format() const;
         int FrameCount() const;
     };
 }
@@ -122,6 +121,7 @@ namespace qlm
         void Close();
         bool IsOpen() const;
 
+        VideoFormat Format() const;
         int Width() const;
         int Height() const;
         int FrameCount() const;
@@ -149,6 +149,7 @@ A reader owns the demuxer and the file it read, so it is **movable but not copya
 | `LoadFromFile(file_name)` | Reads the file into memory, opens the first video track and stops at the first frame |
 | `Close()` | Releases the file and the demuxer |
 | `IsOpen()` | Whether a track is open |
+| `Format()` | Encoding format (`VideoFormat::MP4_MJPEG` or `VideoFormat::MP4_H264`) |
 | `Width()`, `Height()` | Size of the track, taken from the first frame |
 | `FrameCount()` | Number of samples in the track |
 | `FrameRate()` | Frames per second, `0` when the container does not state a frame duration |
@@ -161,7 +162,7 @@ A reader owns the demuxer and the file it read, so it is **movable but not copya
 | `Rewind()` | Moves the sequential cursor back to the first frame |
 | `HasEnded()` | Whether the cursor passed the last frame |
 
-Because every frame is an independent image, `Seek` and the indexed `ReadFrame` are exact: no other frame has to be decoded to reach one.
+For Motion-JPEG tracks, every frame is an independent image, so `Seek` and indexed `ReadFrame` are instantaneous. For H.264 tracks, frames are decoded in GOP order with an internal cache for sequential reads; seeking backwards transparently restarts decoding from the beginning of the track.
 
 ## Examples
 
@@ -198,7 +199,7 @@ reader.ReadFrame(45, frame);       // frame 45, the middle of the second image a
 
 ## Known limitations
 
-- **Motion-JPEG playback by `VideoReader`.** `VideoReader` decodes frames using `stb_image`, which only supports JPEG images; it cannot decode H.264 video tracks. Use an external player (e.g. VLC, MPV) for H.264 files.
+- **H.264 format support in `VideoReader`.** `VideoReader` decodes standard 8-bit 4:2:0 H.264 streams; 10-bit and 4:2:2/4:4:4 streams are rejected.
 - **H.264 macroblock alignment.** Writing with `VideoFormat::MP4_H264` requires both frame width and frame height to be integer multiples of 16.
 - **No audio.** An audio track in a file that is read is ignored, and none is written.
 - **Every frame has one size.** Images of different sizes have to be placed on a common canvas before they are written; the size is fixed by `Open`.
