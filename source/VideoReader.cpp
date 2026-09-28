@@ -37,7 +37,7 @@ namespace qlm
 		void CopyToRgbImage(const std::vector<uint8_t>& pixels, int width, int height, int channels,
 							Image<ImageFormat::RGB, uint8_t>& frame)
 		{
-			if (frame.width != width || frame.height != height)
+			if (frame.Width() != width || frame.Height() != height)
 				frame.Create(width, height);
 
 			for (int y = 0; y < height; y++)
@@ -64,7 +64,7 @@ namespace qlm
 		void CopyToGrayImage(const std::vector<uint8_t>& pixels, int width, int height, int channels,
 							 Image<ImageFormat::GRAY, uint8_t>& frame)
 		{
-			if (frame.width != width || frame.height != height)
+			if (frame.Width() != width || frame.Height() != height)
 				frame.Create(width, height);
 
 			for (int y = 0; y < height; y++)
@@ -210,7 +210,7 @@ namespace qlm
 		void CopyPlanarToRgbImage(const std::vector<uint8_t>& pixels, const int width, const int height,
 								  Image<ImageFormat::RGB, uint8_t>& frame)
 		{
-			if (frame.width != width || frame.height != height)
+			if (frame.Width() != width || frame.Height() != height)
 				frame.Create(width, height);
 
 			const int chroma_width = width / 2;
@@ -241,7 +241,7 @@ namespace qlm
 		void CopyPlanarToGrayImage(const std::vector<uint8_t>& pixels, const int width, const int height,
 								   Image<ImageFormat::GRAY, uint8_t>& frame)
 		{
-			if (frame.width != width || frame.height != height)
+			if (frame.Width() != width || frame.Height() != height)
 				frame.Create(width, height);
 
 			for (int y = 0; y < height; y++)

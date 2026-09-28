@@ -753,30 +753,38 @@ namespace qlm
 			return false;
 		}
 
-		if (frame.width != impl->width || frame.height != impl->height)
+		if (frame.Width() != impl->width || frame.Height() != impl->height)
 		{
-			std::cerr << "Error: frame size " << frame.width << "x" << frame.height
+			std::cerr << "Error: frame size " << frame.Width() << "x" << frame.Height()
 					  << " does not match the video size " << impl->width << "x" << impl->height << "." << std::endl;
 			return false;
 		}
 
-		// stb_image_write expects tightly packed pixels, so a padded stride is not passed on.
-		impl->packed_pixels.resize(static_cast<size_t>(impl->width) * impl->height * 3);
-
-		for (int y = 0; y < impl->height; y++)
+		if (frame.Stride() == frame.Width() * 3)
 		{
-			for (int x = 0; x < impl->width; x++)
-			{
-				const Pixel<ImageFormat::RGB, uint8_t> pix = frame.GetPixel(x, y);
-				const size_t idx = (static_cast<size_t>(y) * impl->width + x) * 3;
-
-				impl->packed_pixels[idx] = pix.r;
-				impl->packed_pixels[idx + 1] = pix.g;
-				impl->packed_pixels[idx + 2] = pix.b;
-			}
+			// The pixels are already tightly packed, so no copy is needed.
+			return EncodeFrame(frame.data, 3);
 		}
+		else
+		{
+			// stb_image_write expects tightly packed pixels, so a padded stride is not passed on.
+			impl->packed_pixels.resize(static_cast<size_t>(impl->width) * impl->height * 3);
 
-		return EncodeFrame(impl->packed_pixels.data(), 3);
+			for (int y = 0; y < impl->height; y++)
+			{
+				for (int x = 0; x < impl->width; x++)
+				{
+					const Pixel<ImageFormat::RGB, uint8_t> pix = frame.GetPixel(x, y);
+					const size_t idx = (static_cast<size_t>(y) * impl->width + x) * 3;
+
+					impl->packed_pixels[idx] = pix.r;
+					impl->packed_pixels[idx + 1] = pix.g;
+					impl->packed_pixels[idx + 2] = pix.b;
+				}
+			}
+
+			return EncodeFrame(impl->packed_pixels.data(), 3);
+		}
 	}
 
 	bool VideoWriter::WriteFrame(const Image<ImageFormat::GRAY, uint8_t>& frame)
@@ -787,28 +795,34 @@ namespace qlm
 			return false;
 		}
 
-		if (frame.width != impl->width || frame.height != impl->height)
+		if (frame.Width() != impl->width || frame.Height() != impl->height)
 		{
-			std::cerr << "Error: frame size " << frame.width << "x" << frame.height
+			std::cerr << "Error: frame size " << frame.Width() << "x" << frame.Height()
 					  << " does not match the video size " << impl->width << "x" << impl->height << "." << std::endl;
 			return false;
 		}
 
-		impl->packed_pixels.resize(static_cast<size_t>(impl->width) * impl->height);
-
-		for (int y = 0; y < impl->height; y++)
+		if (frame.Stride() == frame.Width())
 		{
-			for (int x = 0; x < impl->width; x++)
-			{
-				const Pixel<ImageFormat::GRAY, uint8_t> pix = frame.GetPixel(x, y);
-				const size_t idx = static_cast<size_t>(y) * impl->width + x;
-
-				impl->packed_pixels[idx] = pix.v;
-			}
+			// The pixels are already tightly packed, so no copy is needed.
+			return EncodeFrame(frame.data, 1);
 		}
+		else
+		{
+			impl->packed_pixels.resize(static_cast<size_t>(impl->width) * impl->height);
 
-		return EncodeFrame(impl->packed_pixels.data(), 1);
-	}
+			for (int y = 0; y < impl->height; y++)
+			{
+				for (int x = 0; x < impl->width; x++)
+				{
+					const Pixel<ImageFormat::GRAY, uint8_t> pix = frame.GetPixel(x, y);
+					impl->packed_pixels[y * impl->width + x] = pix.v;
+				}
+			}
+
+			return EncodeFrame(impl->packed_pixels.data(), 1);
+		}
+	}	
 
 	bool VideoWriter::EncodeFrame(const void* pixels, int components)
 	{
