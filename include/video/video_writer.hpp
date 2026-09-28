@@ -26,6 +26,7 @@ namespace qlm
 
 		// Encodes a packed frame as H.264 and hands it to the multiplexer.
 		bool EncodeH264(const void* pixels, int components);
+		bool EncodeMJPEG(const void* pixels, int components);
 
 		// Fills the planar 4:2:0 frame the encoder expects from packed RGB or grayscale
 		// pixels, where components is 3 for RGB and 1 for GRAY.

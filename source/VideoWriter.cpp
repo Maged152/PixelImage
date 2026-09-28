@@ -15,6 +15,43 @@ namespace qlm
 {
 	namespace
 	{
+		bool ValidateInputs(const int frame_width, const int frame_height, const int frame_rate, const int quality, const VideoFormat format)
+		{
+			if (format != VideoFormat::MP4_MJPEG && format != VideoFormat::MP4_H264)
+			{
+				std::cerr << "Error: unsupported video format." << std::endl;
+				return false;
+			}
+
+			if (frame_width <= 0 || frame_height <= 0 || frame_width > 65535 || frame_height > 65535)
+			{
+				std::cerr << "Error: invalid video dimensions " << frame_width << "x" << frame_height
+						  << ". They must be positive and at most 65535." << std::endl;
+				return false;
+			}
+
+			if (frame_rate <= 0 || frame_rate > 90000)
+			{
+				std::cerr << "Error: invalid frame rate " << frame_rate << "." << std::endl;
+				return false;
+			}
+
+			if (quality < 1 || quality > 100)
+			{
+				std::cerr << "Error: invalid quality " << quality
+						  << ". It must be in the range [1, 100]." << std::endl;
+				return false;
+			}
+
+			if (format == VideoFormat::MP4_H264 && (frame_width % 16 != 0 || frame_height % 16 != 0))
+			{
+				std::cerr << "Error: for H.264 encoding, video dimensions must be multiples of 16."
+						  << std::endl;
+				return false;
+			}
+
+			return true;
+		}
 		// ---------------------------------------------------------------------------------
 		// MP4 (ISO/IEC 14496-12) box writers.
 		//
@@ -488,31 +525,8 @@ namespace qlm
 		if (impl == nullptr) // this object was moved from, so it owns nothing yet
 			impl = std::make_unique<Impl>();
 
-		if (format != VideoFormat::MP4_MJPEG && format != VideoFormat::MP4_H264)
+		if (!ValidateInputs(frame_width, frame_height, frame_rate, quality, format))
 		{
-			std::cerr << "Error: unsupported video format." << std::endl;
-			return false;
-		}
-
-		if (frame_width <= 0 || frame_height <= 0 || frame_width > 0xFFFF || frame_height > 0xFFFF)
-		{
-			std::cerr << "Error: invalid video size " << frame_width << "x" << frame_height
-					  << ", each side must be between 1 and 65535." << std::endl;
-			return false;
-		}
-
-		// The H.264 encoder works on 16 x 16 macroblocks, so a frame has to fill a whole
-		// number of them. Motion-JPEG has no such rule.
-		if (format == VideoFormat::MP4_H264 && (frame_width % 16 != 0 || frame_height % 16 != 0))
-		{
-			std::cerr << "Error: H.264 needs a frame size that is a multiple of 16, but "
-					  << frame_width << "x" << frame_height << " was requested." << std::endl;
-			return false;
-		}
-
-		if (frame_rate <= 0 || frame_rate > 90000)
-		{
-			std::cerr << "Error: invalid frame rate " << frame_rate << "." << std::endl;
 			return false;
 		}
 
@@ -527,7 +541,7 @@ namespace qlm
 		impl->width = frame_width;
 		impl->height = frame_height;
 		impl->frame_rate = frame_rate;
-		impl->quality = std::clamp(quality, 1, 100);
+		impl->quality = quality;
 		impl->format = format;
 		impl->frames_written = 0;
 		impl->sample_sizes.clear();
@@ -595,35 +609,35 @@ namespace qlm
 			impl->h264.i420.resize(static_cast<size_t>(frame_width) * frame_height * 3 / 2);
 			impl->h264.frame_ticks = 90000 / frame_rate;
 			impl->h264_quantizer = QualityToQuantizer(impl->quality);
-
-			return true;
 		}
-
-		// Motion-JPEG: file type, then the media data header; the mdat size is patched by
-		// Close and the index appended after the samples.
-		std::vector<uint8_t> header;
-		const size_t ftyp = BeginBox(header, "ftyp");
-		AppendBytes(header, "isom", 4);     // major_brand
-		AppendU32(header, 0x00000200);      // minor_version
-		AppendBytes(header, "isom", 4);     // compatible_brands
-		AppendBytes(header, "iso2", 4);
-		AppendBytes(header, "mp41", 4);
-		EndBox(header, ftyp);
-
-		impl->mdat_size_position = static_cast<int64_t>(header.size());
-		AppendU32(header, 0);               // patched by Close
-		AppendBytes(header, "mdat", 4);
-
-		if (std::fwrite(header.data(), 1, header.size(), impl->file) != header.size())
+		else
 		{
-			std::cerr << "Error: cannot write to the video file " << file_name << "." << std::endl;
-			std::fclose(impl->file);
-			impl->file = nullptr;
-			return false;
-		}
+			// Motion-JPEG: file type, then the media data header; the mdat size is patched by
+			// Close and the index appended after the samples.
+			std::vector<uint8_t> header;
+			const size_t ftyp = BeginBox(header, "ftyp");
+			AppendBytes(header, "isom", 4);     // major_brand
+			AppendU32(header, 0x00000200);      // minor_version
+			AppendBytes(header, "isom", 4);     // compatible_brands
+			AppendBytes(header, "iso2", 4);
+			AppendBytes(header, "mp41", 4);
+			EndBox(header, ftyp);
 
-		// The samples follow the header directly, so the payload position is known here.
-		impl->mdat_payload_position = static_cast<uint64_t>(FilePosition(impl->file));
+			impl->mdat_size_position = static_cast<int64_t>(header.size());
+			AppendU32(header, 0);               // patched by Close
+			AppendBytes(header, "mdat", 4);
+
+			if (std::fwrite(header.data(), 1, header.size(), impl->file) != header.size())
+			{
+				std::cerr << "Error: cannot write to the video file " << file_name << "." << std::endl;
+				std::fclose(impl->file);
+				impl->file = nullptr;
+				return false;
+			}
+
+			// The samples follow the header directly, so the payload position is known here.
+			impl->mdat_payload_position = static_cast<uint64_t>(FilePosition(impl->file));
+		}
 
 		return true;
 	}
@@ -803,38 +817,8 @@ namespace qlm
 
 		if (impl->format == VideoFormat::MP4_H264)
 			return EncodeH264(pixels, components);
-
-		impl->jpeg.clear();
-
-		if (stbi_write_jpg_to_func(AppendJpegData, &impl->jpeg, impl->width, impl->height,
-								   components, pixels, impl->quality) == 0 || impl->jpeg.empty())
-		{
-			std::cerr << "Error: failed to encode a JPEG frame." << std::endl;
-			return false;
-		}
-
-		// The size field of the mdat box is 32 bits wide, so this container cannot hold
-		// more than 4 GB of media data. Refusing the frame here keeps the file valid
-		// instead of letting the size field wrap around.
-		const uint64_t max_mdat_payload = 0xFFFFFFFFull - 8ull;
-		if (impl->mdat_payload_size + impl->jpeg.size() > max_mdat_payload)
-		{
-			std::cerr << "Error: the video file " << impl->file_name
-					  << " would exceed the 4 GB limit of this container." << std::endl;
-			return false;
-		}
-
-		if (std::fwrite(impl->jpeg.data(), 1, impl->jpeg.size(), impl->file) != impl->jpeg.size())
-		{
-			std::cerr << "Error: failed to write a frame to the video file " << impl->file_name << "." << std::endl;
-			return false;
-		}
-
-		impl->sample_sizes.push_back(static_cast<uint32_t>(impl->jpeg.size()));
-		impl->mdat_payload_size += impl->jpeg.size();
-		impl->frames_written++;
-
-		return true;
+		else
+			return EncodeMJPEG(pixels, components);
 	}
 
 	// Converts packed RGB (components = 3) or grayscale (components = 1) pixels into the
@@ -950,6 +934,41 @@ namespace qlm
 			return false;
 		}
 
+		impl->frames_written++;
+
+		return true;
+	}
+
+	bool VideoWriter::EncodeMJPEG(const void *pixels, int components)
+	{
+		impl->jpeg.clear();
+
+		if (stbi_write_jpg_to_func(AppendJpegData, &impl->jpeg, impl->width, impl->height,
+								   components, pixels, impl->quality) == 0 || impl->jpeg.empty())
+		{
+			std::cerr << "Error: failed to encode a JPEG frame." << std::endl;
+			return false;
+		}
+
+		// The size field of the mdat box is 32 bits wide, so this container cannot hold
+		// more than 4 GB of media data. Refusing the frame here keeps the file valid
+		// instead of letting the size field wrap around.
+		const uint64_t max_mdat_payload = 0xFFFFFFFFull - 8ull;
+		if (impl->mdat_payload_size + impl->jpeg.size() > max_mdat_payload)
+		{
+			std::cerr << "Error: the video file " << impl->file_name
+					  << " would exceed the 4 GB limit of this container." << std::endl;
+			return false;
+		}
+
+		if (std::fwrite(impl->jpeg.data(), 1, impl->jpeg.size(), impl->file) != impl->jpeg.size())
+		{
+			std::cerr << "Error: failed to write a frame to the video file " << impl->file_name << "." << std::endl;
+			return false;
+		}
+
+		impl->sample_sizes.push_back(static_cast<uint32_t>(impl->jpeg.size()));
+		impl->mdat_payload_size += impl->jpeg.size();
 		impl->frames_written++;
 
 		return true;
