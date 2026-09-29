@@ -10,7 +10,7 @@ namespace qlm
 	// Reads a video file one frame at a time.
 	//
 	// The MP4 container is demuxed by minimp4. Motion-JPEG tracks are decoded by
-	// stb_image, while H.264 (AVC) tracks are decoded by edge264. See doc/video.md
+	// stb_image, while H.264 (AVC) tracks are decoded by OpenH264. See doc/video.md
 	// for the details.
 	//
 	// A VideoReader owns the demuxer and the mapped file data, so it is movable but

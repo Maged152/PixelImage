@@ -6,6 +6,9 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     option(PixelImage_BUILD_EXAMPLES "Enable examples" ON)
 endif()
 
+List (APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(FetchDependencies)
+
 # Configuration
 set(version_config "${PROJECT_NAME}ConfigVersion.cmake")
 set(project_config "${PROJECT_NAME}Config.cmake")
@@ -22,6 +25,11 @@ file(GLOB_RECURSE SOURCES source/*.cpp source/*.c)
 
 # Create the static library
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
+
+# The H.264 decoder (OpenH264) VideoReader reads H.264 tracks with. Its library is built by
+# cmake/FetchDependencies.cmake, so the dependency on that build has to be stated.
+target_link_libraries(${PROJECT_NAME} PRIVATE openh264::openh264)
+add_dependencies(${PROJECT_NAME} openh264_ext)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES 
                         CXX_STANDARD 20

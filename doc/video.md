@@ -4,7 +4,7 @@ Two classes read and write video files, one frame at a time:
 
 | Component | Role |
 |---|---|
-| [`VideoReader`](#videoreader) | Demuxes an MP4 container (minimp4) and decodes every frame with `stb_image` (Motion-JPEG) or `edge264` (H.264) |
+| [`VideoReader`](#videoreader) | Demuxes an MP4 container (minimp4) and decodes every frame with `stb_image` (Motion-JPEG) or `OpenH264` (H.264) |
 | [`VideoWriter`](#videowriter) | Encodes every frame (Motion-JPEG via `stb_image_write` or H.264 via `minih264`) and muxes an MP4 container |
 
 The default track format is **Motion-JPEG**, where every frame is an independent JPEG image. That keeps the reader and the writer small — and makes every frame a random access point — at the cost of file size.
@@ -29,7 +29,7 @@ When writing Motion-JPEG (`VideoFormat::MP4_MJPEG`), every frame is stored as a 
 
 When writing H.264 (`VideoFormat::MP4_H264`), input frames are converted to BT.601 planar I420 and encoded with a single-threaded H.264 encoder into Annex-B NAL units, packaged into standard `avc1` / `avcC` tracks. Frame dimensions for H.264 **must be multiples of 16** (macroblock constraint).
 
-Reading supports both Motion-JPEG (one-component grayscale and three-component JPEG samples) and H.264 (8-bit 4:2:0 streams decoded via `edge264`). A grayscale sample read into an `RGB` image is replicated over the three channels.
+Reading supports both Motion-JPEG (one-component grayscale and three-component JPEG samples) and H.264 (8-bit 4:2:0 streams decoded via `OpenH264`). A grayscale sample read into an `RGB` image is replicated over the three channels.
 
 ## `VideoWriter`
 
