@@ -4,7 +4,7 @@
 
 Sources: [`include/image.hpp`](../include/image.hpp) · [`source/LoadFromFile.cpp`](../source/LoadFromFile.cpp) · [`source/SaveToFile.cpp`](../source/SaveToFile.cpp)
 
-**On this page** — [Memory model](#memory-model) · [Public variables](#public-variables) · [Constructors](#constructors) · [Creating and filling](#creating-and-filling) · [Pixel access](#pixel-access) · [File I/O](#file-io) · [`NumerOfChannels`](#numerofchannels) · [Known limitations](#known-limitations)
+**On this page** — [Memory model](#memory-model) · [Public variables](#public-variables) · [Constructors](#constructors) · [Creating and filling](#creating-and-filling) · [Pixel access](#pixel-access) · [File I/O](#file-io) · [`NumberOfChannels`](#numerofchannels) · [Known limitations](#known-limitations)
 
 ## Memory model
 
@@ -222,7 +222,7 @@ Decodes the file with stb (`stbi_load` for `uint8_t`, `stbi_load_16` for `int16_
 **Notes**
 
 - On success `stride` is set to `width`, so a loaded image never has padding.
-- `NumerOfChannels()` reports the channel count of the **file**, not of the format; see [`NumerOfChannels`](#numerofchannels).
+- `NumberOfChannels()` reports the channel count of the **file**, not of the format; see [`NumberOfChannels`](#numerofchannels).
 - Channel compatibility is checked: `GRAY` requires at least 1 channel, `RGB` at least 3. Incompatible files fail and leave the image unchanged.
 - Alpha is taken from the 4th channel for `RGB`, and from the channel after the first for `GRAY` when the file has 2 or 4 channels. Otherwise alpha is set to `std::numeric_limits<T>::max()`.
 - The previous buffer is released only after a successful decode.
@@ -288,10 +288,10 @@ undefined reference to `qlm::Image<(qlm::ImageFormat)3, unsigned char>::SaveToFi
                       // (ImageFormat)3 == HSV
 ```
 
-## `NumerOfChannels`
+## `NumberOfChannels`
 
 ```cpp
-int NumerOfChannels() const;
+int NumberOfChannels() const;
 ```
 
 Returns the number of channels stored in `num_of_channels`. The value has two different origins:
@@ -301,16 +301,16 @@ Returns the number of channels stored in `num_of_channels`. The value has two di
 | Constructor, `Create`, or assignment | Format-derived: `GRAY` 2, `RGB` 4, `YCrCb` 3, `HSV`/`HLS` 4 | `SetNumChannels` |
 | `LoadFromFile` | The channel count reported by the file, e.g. `3` for a JPEG loaded into an `RGB` image | `stbi_load` output |
 
-> **Note** — the method is spelled `NumerOfChannels`, without the `b` in "Number". That is the actual API name.
+> **Note** — the method is spelled `NumberOfChannels`, without the `b` in "Number". That is the actual API name.
 
-> **Note** — the two meanings above are the reason the [project README](../README.md) example tests `NumerOfChannels() == 3` to decide whether a loaded image has an alpha channel.
+> **Note** — the two meanings above are the reason the [project README](../README.md) example tests `NumberOfChannels() == 3` to decide whether a loaded image has an alpha channel.
 
 ```cpp
 qlm::Image<qlm::ImageFormat::RGB, uint8_t> img(64, 64);
-img.NumerOfChannels();          // 4 (RGB + alpha)
+img.NumberOfChannels();          // 4 (RGB + alpha)
 
 img.LoadFromFile("photo.jpg");  // a 3-channel JPEG
-img.NumerOfChannels();          // 3
+img.NumberOfChannels();          // 3
 ```
 
 ## Known limitations

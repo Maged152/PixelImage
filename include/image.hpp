@@ -272,7 +272,7 @@ namespace qlm
 
 		bool SaveToFile(const std::string& file_name, bool alpha = true,int quality = 100);
 
-		int NumerOfChannels() const
+		int NumberOfChannels() const
 		{
 			return num_of_channels;
 		}

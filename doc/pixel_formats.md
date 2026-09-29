@@ -2,7 +2,7 @@
 
 The five `Pixel` specializations. Each one is declared in its own header and exposes the same foundation — default/copy/move construction, assignment, the [cast operator](pixel.md#cast-operator), `Set`, `MAC` and `SquaredEuclideanDistance` — over a different set of channel members.
 
-| Format | Header | Channels | Alpha counted in `NumerOfChannels()` |
+| Format | Header | Channels | Alpha counted in `NumberOfChannels()` |
 |---|---|---|---|
 | `GRAY` | [`pixel_GRAY.hpp`](../include/pixel/pixel_GRAY.hpp) | `v`, `a` | yes |
 | `RGB` | [`pixel_RGB.hpp`](../include/pixel/pixel_RGB.hpp) | `r`, `g`, `b`, `a` | yes |
@@ -275,7 +275,7 @@ class Pixel<ImageFormat::YCrCb, T>;
 | `T y` | Luminance | `0` |
 | `T cr` | Chroma red | `0` |
 | `T cb` | Chroma blue | `0` |
-| `T a` | Alpha (not counted by `NumerOfChannels()`) | `std::numeric_limits<T>::max()` (opaque) |
+| `T a` | Alpha (not counted by `NumberOfChannels()`) | `std::numeric_limits<T>::max()` (opaque) |
 
 ### Constructors
 

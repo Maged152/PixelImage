@@ -21,7 +21,7 @@ enum class ImageFormat
 };
 ```
 
-| Value | Meaning | Channels | Alpha | `NumerOfChannels()` |
+| Value | Meaning | Channels | Alpha | `NumberOfChannels()` |
 |---|---|---|---|---|
 | `GRAY` | Grayscale | `v` | yes | 2 |
 | `RGB` | Red, green, blue | `r`, `g`, `b` | yes | 4 |
@@ -29,7 +29,7 @@ enum class ImageFormat
 | `HSV` | Hue, saturation, value | `h`, `s`, `v` | yes | 4 |
 | `HLS` | Hue, lightness, saturation | `h`, `l`, `s` | yes | 4 |
 
-The channel counts above are what `Image::SetNumChannels` assigns when an image is created or loaded; see [`NumerOfChannels()`](image.md#numerofchannels) for the exception after `LoadFromFile`.
+The channel counts above are what `Image::SetNumChannels` assigns when an image is created or loaded; see [`NumberOfChannels()`](image.md#numerofchannels) for the exception after `LoadFromFile`.
 
 > **Note** — `YCrCb` pixels do declare an `a` member, but it is deliberately excluded from the channel count, since no YCrCb alpha is defined by the format.
 

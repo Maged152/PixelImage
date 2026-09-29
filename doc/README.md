@@ -64,7 +64,7 @@ Building and consuming the library is covered in the [project README](../README.
 |---|---|---|---|
 | `GRAY` | `v` | yes (`a`) | `uint8_t`, `int16_t`, `float` |
 | `RGB` | `r`, `g`, `b` | yes (`a`) | `uint8_t`, `int16_t`, `float` |
-| `YCrCb` | `y`, `cr`, `cb` | stored in `a`, excluded from `NumerOfChannels()` | `uint8_t`, `float` |
+| `YCrCb` | `y`, `cr`, `cb` | stored in `a`, excluded from `NumberOfChannels()` | `uint8_t`, `float` |
 | `HSV` | `h`, `s`, `v` | yes (`a`) | `uint8_t`, `float` |
 | `HLS` | `h`, `l`, `s` | yes (`a`) | `uint8_t`, `float` |
 

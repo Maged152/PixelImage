@@ -35,7 +35,7 @@ int main()
 	}
     
 	// Check alpha component
-    bool alpha = (in.NumerOfChannels() == 4);
+    bool alpha = (in.NumberOfChannels() == 4);
 
     /*
          Perform any operations on the image

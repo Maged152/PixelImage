@@ -13,15 +13,15 @@ int main()
 	}
 	// check alpha component
 	bool alpha{ true };
-	if (in.NumerOfChannels() == 3)
+	if (in.NumberOfChannels() == 3)
 		alpha = false;
 
     qlm::Pixel<qlm::ImageFormat::RGB, uint8_t> green(0, 255, 0);  // Green color
 
     // Set the red pixels to green
-    for (int y = 0; y < in.height; y++)
+    for (int y = 0; y < in.Height(); y++)
     {
-        for (int x = 0; x < in.width; x++)
+        for (int x = 0; x < in.Width(); x++)
         {
             const qlm::Pixel<qlm::ImageFormat::RGB, uint8_t> pix = in.GetPixel(x, y);
             const qlm::Pixel<qlm::ImageFormat::RGB, uint8_t> inverted_pix {
