@@ -8,8 +8,7 @@ int main()
 {
 	const int frame_rate = 30;                       // frames per second
 	const double seconds_per_image = 1.0;            // how long every image stays on screen
-	const int frames_per_image =frame_rate * seconds_per_image;
-	const double tolerance = 8.0;                    // allowed mean absolute error per channel
+	const int frames_per_image = frame_rate * seconds_per_image;
 	const std::string file_name = "images_slide_show.mp4";
 
 	// 1. Read the images.

@@ -10,7 +10,7 @@ PixelImage is a C++ wrapper for the [stb](https://github.com/nothings/stb) libra
 
 - `Random Initialization`: Seedable random image and pixel generation (`RandomGenerator`, `RandomPixel`, `Image::RandomInit`).
 
-- `Video I/O`: Write and read Motion-JPEG videos (`VideoWriter`, `VideoReader`) frame by frame.
+- `Video I/O`: Write and read MP4 video (`VideoWriter`, `VideoReader`) frame by frame, as H.264 or Motion-JPEG.
 
 - `Alpha Channel Handling`: Automatically detects and handles alpha channels.
 

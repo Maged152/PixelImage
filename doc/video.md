@@ -7,11 +7,13 @@ Two classes read and write video files, one frame at a time:
 | [`VideoReader`](#videoreader) | Demuxes an MP4 container (minimp4) and decodes every frame with `stb_image` (Motion-JPEG) or `OpenH264` (H.264) |
 | [`VideoWriter`](#videowriter) | Encodes every frame (Motion-JPEG via `stb_image_write` or H.264 via `minih264`) and muxes an MP4 container |
 
-The default track format is **Motion-JPEG**, where every frame is an independent JPEG image. That keeps the reader and the writer small — and makes every frame a random access point — at the cost of file size.
+`VideoWriter` writes **H.264** by default (`VideoFormat::MP4_H264`): frames are encoded by the vendored `minih264` encoder, muxed into a standard `avc1` MP4 track by the vendored `minimp4`, and read back by the vendored `OpenH264` decoder. That is what keeps video files small.
 
-For significantly smaller files, `VideoWriter` also supports **H.264** (`VideoFormat::MP4_H264`), encoded by vendored `minih264` and muxed into a standard `avc1` MP4 track using `minimp4`.
+**Motion-JPEG** (`VideoFormat::MP4_MJPEG`) is the other option, and the one to pick when no video codec should be involved at all: every frame is an independent JPEG image, written by `stb_image_write` and read by `stb_image`, which makes every frame a random access point at the cost of file size.
 
-Sources: [`include/video_reader.hpp`](../include/video_reader.hpp) · [`include/video_writer.hpp`](../include/video_writer.hpp) · Runnable example: [`examples/example_video_writer.cpp`](../examples/example_video_writer.cpp)
+Which codec a file holds is stated in its sample entry, and `VideoReader` picks the decoder from that, so one reader reads both.
+
+Sources: [`include/video/video_reader.hpp`](../include/video/video_reader.hpp) · [`include/video/video_writer.hpp`](../include/video/video_writer.hpp) · [`source/video_reader/`](../source/video_reader) · [`source/video_writer/`](../source/video_writer) · Runnable examples: [`examples/example_video_writer.cpp`](../examples/example_video_writer.cpp), [`examples/example_video_reader.cpp`](../examples/example_video_reader.cpp)
 
 **On this page** — [Supported container](#supported-container) · [`VideoWriter`](#videowriter) · [`VideoReader`](#videoreader) · [Examples](#examples) · [Known limitations](#known-limitations)
 
@@ -20,7 +22,7 @@ Sources: [`include/video_reader.hpp`](../include/video_reader.hpp) · [`include/
 | | Reading | Writing |
 |---|---|---|
 | Container | MP4 / ISO base media (ISO/IEC 14496-12) | MP4 / ISO base media |
-| Codec | `jpeg` (Motion-JPEG) or `avc1` (H.264) | `jpeg` (Motion-JPEG, default) or `avc1` (H.264) |
+| Codec | `jpeg` (Motion-JPEG) or `avc1` (H.264) | `avc1` (H.264, the default) or `jpeg` (Motion-JPEG) |
 | Frame formats | `GRAY` or `RGB` with `uint8_t` (1, 2, 3 or 4 channel samples) | `GRAY` or `RGB` with `uint8_t` |
 | Audio | ignored | not written |
 | Extensions | `.mp4`, `.m4v`, and any other MP4 file | whatever name is passed to `Open` (`.mp4` is conventional) |
@@ -38,15 +40,15 @@ namespace qlm
 {
     enum class VideoFormat
     {
-        MP4_MJPEG,  // Motion-JPEG frames in an MP4 container (default)
-        MP4_H264    // H.264 video in an MP4 container (requires width & height % 16 == 0)
+        MP4_MJPEG,  // Motion-JPEG frames in an MP4 container
+        MP4_H264    // H.264 video in an MP4 container (the default; needs width & height % 16 == 0)
     };
 
     class VideoWriter
     {
     public:
         bool Open(const std::string& file_name, int frame_width, int frame_height, int frame_rate,
-                  int quality = 90, VideoFormat format = VideoFormat::MP4_MJPEG);
+                  int quality = 90, VideoFormat format = VideoFormat::MP4_H264);
 
         void Close();
         bool IsOpen() const;
@@ -86,7 +88,7 @@ Writes the index (`moov`) and closes the file. The destructor calls it too, so a
 
 ```cpp
 qlm::VideoWriter writer;
-writer.Open("movie.mp4", 320, 240, 30);
+writer.Open("movie.mp4", 320, 240, 30, 90, qlm::VideoFormat::MP4_MJPEG);   // Motion-JPEG
 
 qlm::Image<qlm::ImageFormat::RGB, uint8_t> frame(320, 240);
 // ... draw into frame ...
@@ -97,16 +99,16 @@ writer.Close();
 
 | Overload | Content of the frame |
 |---|---|
-| `WriteFrame(const Image<RGB, uint8_t>&)` | Three-component JPEG |
-| `WriteFrame(const Image<GRAY, uint8_t>&)` | Single-component (grayscale) JPEG |
+| `WriteFrame(const Image<RGB, uint8_t>&)` | Color frame: a three-component JPEG (`MP4_MJPEG`) or a 4:2:0 H.264 frame (`MP4_H264`) |
+| `WriteFrame(const Image<GRAY, uint8_t>&)` | Grayscale frame: a single-component JPEG (`MP4_MJPEG`) or a 4:2:0 H.264 frame (`MP4_H264`) |
 
 **Notes**
 
 - Every frame must have the size given to `Open`, otherwise the call fails and prints to `std::cerr`.
 - One call writes exactly one frame; a video of `n` frames needs `n` calls.
-- Frames are written in the order they are passed; there is no inter-frame compression and no motion estimation.
+- Frames are written in the order they are passed. `MP4_H264` compresses across frames and starts a fresh prediction with a key frame every second, while `MP4_MJPEG` has no inter-frame compression at all.
 - `FrameCount()` counts the frames accepted so far.
-- The file stays playable while it is being written — a frame that is fully written is a complete JPEG image — and a process that is killed leaves a file with valid frames but no index.
+- A file is complete only once `Close` has written the index (`moov`), so a process that is killed leaves a file no player opens: the frames are there, but nothing states where they are. With `MP4_MJPEG` each of those frames is still a complete JPEG image.
 
 
 ## `VideoReader`
@@ -117,7 +119,7 @@ namespace qlm
     class VideoReader
     {
     public:
-        bool LoadFromFile(const std::string& file_name);
+        bool Open(const std::string& file_name);
         void Close();
         bool IsOpen() const;
 
@@ -144,9 +146,11 @@ namespace qlm
 
 A reader owns the demuxer and the file it read, so it is **movable but not copyable**.
 
+The codec is taken from the sample entry of the track: an `avc1` (H.264) track is decoded by `OpenH264`, and any other track is handed to `stb_image` as a series of still images (Motion-JPEG). An H.265 (`hvc1`) track is rejected.
+
 | Method | Description |
 |---|---|
-| `LoadFromFile(file_name)` | Reads the file into memory, opens the first video track and stops at the first frame |
+| `Open(file_name)` | Reads the file into memory, opens the first video track, picks the decoder from its sample entry and decodes the first frame |
 | `Close()` | Releases the file and the demuxer |
 | `IsOpen()` | Whether a track is open |
 | `Format()` | Encoding format (`VideoFormat::MP4_MJPEG` or `VideoFormat::MP4_H264`) |
@@ -188,7 +192,7 @@ Reading it back and jumping to a known time:
 
 ```cpp
 qlm::VideoReader reader;
-reader.LoadFromFile("slideshow.mp4");
+reader.Open("slideshow.mp4");
 
 std::cout << reader.FrameCount() << " frames, " << reader.FrameRate()
           << " fps, " << reader.Duration() << " s\n";
@@ -200,10 +204,11 @@ reader.ReadFrame(45, frame);       // frame 45, the middle of the second image a
 ## Known limitations
 
 - **H.264 format support in `VideoReader`.** `VideoReader` decodes standard 8-bit 4:2:0 H.264 streams; 10-bit and 4:2:2/4:4:4 streams are rejected.
+- **H.264 reading is built, not vendored as source.** `cmake/FetchDependencies.cmake` fetches OpenH264 and builds it with the Makefile the project ships, which needs GNU make and a shell — the `gnu_*` presets provide both, and any other generator is rejected with a message that says so.
 - **H.264 macroblock alignment.** Writing with `VideoFormat::MP4_H264` requires both frame width and frame height to be integer multiples of 16.
 - **No audio.** An audio track in a file that is read is ignored, and none is written.
 - **Every frame has one size.** Images of different sizes have to be placed on a common canvas before they are written; the size is fixed by `Open`.
-- **The whole file is read into memory.** `VideoReader::LoadFromFile` keeps the container in memory, so very large videos need proportional RAM.
+- **The whole file is read into memory.** `VideoReader::Open` keeps the container in memory, so very large videos need proportional RAM.
 - **Errors are reported coarsely.** `ReadFrame` returning `false` means the end of the track or a sample that could not be decoded; the demuxer does not say which.
 - **4 GB per file when writing.** The size field of the `mdat` box is 32 bits wide, so `WriteFrame` refuses the frame that would push the file past 4 GB.
 - **Not thread-safe.** One instance, one thread.

@@ -27,7 +27,7 @@ namespace qlm
 	namespace
 	{
 		// Limits a value to the range a channel has.
-		uint8_t ClipToByte(const int value)
+		inline uint8_t ClipToByte(const int value)
 		{
 			return static_cast<uint8_t>(std::clamp(value, 0, 255));
 		}
@@ -35,7 +35,7 @@ namespace qlm
 		// Copies a frame the decoder produced out of its buffers, dropping the padding it keeps
 		// between the rows. The caller checks that the frame is an 8-bit 4:2:0 one, the only format
 		// the layout above holds, so only the shape of the planes is checked here.
-		bool CopyDecoderFrame(unsigned char* const planes[3], const int strides[2], const int width,
+		inline bool CopyDecoderFrame(unsigned char* const planes[3], const int strides[2], const int width,
 							  const int height, PlanarFrame& frame)
 		{
 			if (width <= 0 || height <= 0 || width % 2 != 0 || height % 2 != 0 ||
@@ -75,7 +75,7 @@ namespace qlm
 		// Converts a packed planar 4:2:0 frame into an RGB image. The H.264 writer converts its input
 		// to BT.601 limited range before it encodes it, so that is what is inverted here; chroma is
 		// taken from the chroma pixel the luma pixel belongs to.
-		void CopyPlanarToRgbImage(const std::vector<uint8_t>& pixels, const int width, const int height,
+		inline void CopyPlanarToRgbImage(const std::vector<uint8_t>& pixels, const int width, const int height,
 								  Image<ImageFormat::RGB, uint8_t>& frame)
 		{
 			if (frame.Width() != width || frame.Height() != height)
@@ -106,7 +106,7 @@ namespace qlm
 
 		// Converts a packed planar 4:2:0 frame into a grayscale image: its luma plane is the picture,
 		// and the chroma planes hold no brightness, so they are dropped.
-		void CopyPlanarToGrayImage(const std::vector<uint8_t>& pixels, const int width, const int height,
+		inline void CopyPlanarToGrayImage(const std::vector<uint8_t>& pixels, const int width, const int height,
 								   Image<ImageFormat::GRAY, uint8_t>& frame)
 		{
 			if (frame.Width() != width || frame.Height() != height)
@@ -123,7 +123,7 @@ namespace qlm
 		// size stated in the avcC box (a value minimp4 does not hand out). The candidates are tried
 		// from the widest one: the first that walks the whole sample as a series of length prefixed
 		// NAL units is the size the sample uses. 0 means that the sample holds none at all.
-		size_t NaluLengthSize(const uint8_t* sample, const size_t sample_bytes)
+		inline size_t NaluLengthSize(const uint8_t* sample, const size_t sample_bytes)
 		{
 			static constexpr size_t candidates[] = { 4, 2, 1 };
 
@@ -166,7 +166,7 @@ namespace qlm
 		}
 
 		// Converts decoded sample pixels (1, 2, 3 or 4 channels) into an RGB image.
-		void CopyToRgbImage(const std::vector<uint8_t>& pixels, int width, int height, int channels,
+		inline void CopyToRgbImage(const std::vector<uint8_t>& pixels, int width, int height, int channels,
 							Image<ImageFormat::RGB, uint8_t>& frame)
 		{
 			if (frame.Width() != width || frame.Height() != height)
@@ -193,7 +193,7 @@ namespace qlm
 		}
 
 		// Converts decoded sample pixels into a grayscale image.
-		void CopyToGrayImage(const std::vector<uint8_t>& pixels, int width, int height, int channels,
+		inline void CopyToGrayImage(const std::vector<uint8_t>& pixels, int width, int height, int channels,
 							 Image<ImageFormat::GRAY, uint8_t>& frame)
 		{
 			if (frame.Width() != width || frame.Height() != height)
@@ -218,7 +218,7 @@ namespace qlm
 		}
 
 		// Text for the status a decoder call returned, used in the error messages.
-		const char* H264StatusText(const int status)
+		inline const char* H264StatusText(const int status)
 		{
 			switch (status)
 			{
@@ -241,7 +241,7 @@ namespace qlm
 		// Reports whether a status a decoder call returned says that the call did not go well. A
 		// frame that is still pending with the decoder, and a frame whose error the decoder
 		// concealed, are both normal outcomes of a call, so neither of them is one.
-		bool H264StatusIsError(const int status)
+		inline bool H264StatusIsError(const int status)
 		{
 			return (status & ~(dsErrorFree | dsFramePending | dsDataErrorConcealed)) != 0;
 		}

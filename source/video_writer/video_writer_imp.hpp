@@ -23,18 +23,18 @@ namespace qlm
 	// stss means that every sample is a sync sample).
 	// All integer fields in an MP4 file are big-endian.
 	// ---------------------------------------------------------------------------------
-	static void AppendU8(std::vector<uint8_t>& out, uint8_t value)
+	inline void AppendU8(std::vector<uint8_t>& out, uint8_t value)
 	{
 		out.push_back(value);
 	}
 
-	static void AppendU16(std::vector<uint8_t>& out, uint16_t value)
+	inline void AppendU16(std::vector<uint8_t>& out, uint16_t value)
 	{
 		out.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
 		out.push_back(static_cast<uint8_t>(value & 0xFF));
 	}
 
-	static void AppendU32(std::vector<uint8_t>& out, uint32_t value)
+	inline void AppendU32(std::vector<uint8_t>& out, uint32_t value)
 	{
 		out.push_back(static_cast<uint8_t>((value >> 24) & 0xFF));
 		out.push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
@@ -42,25 +42,25 @@ namespace qlm
 		out.push_back(static_cast<uint8_t>(value & 0xFF));
 	}
 
-	static void AppendU64(std::vector<uint8_t>& out, uint64_t value)
+	inline void AppendU64(std::vector<uint8_t>& out, uint64_t value)
 	{
 		AppendU32(out, static_cast<uint32_t>((value >> 32) & 0xFFFFFFFFu));
 		AppendU32(out, static_cast<uint32_t>(value & 0xFFFFFFFFu));
 	}
 
-	static void AppendBytes(std::vector<uint8_t>& out, const void* bytes, size_t size)
+	inline void AppendBytes(std::vector<uint8_t>& out, const void* bytes, size_t size)
 	{
 		const uint8_t* first = static_cast<const uint8_t*>(bytes);
 		out.insert(out.end(), first, first + size);
 	}
 
-	static void AppendZeros(std::vector<uint8_t>& out, size_t count)
+	inline void AppendZeros(std::vector<uint8_t>& out, size_t count)
 	{
 		out.insert(out.end(), count, 0);
 	}
 
 	// Appends a box header and returns the position of its size field.
-	static size_t BeginBox(std::vector<uint8_t>& out, const char* type)
+	inline size_t BeginBox(std::vector<uint8_t>& out, const char* type)
 	{
 		const size_t size_position = out.size();
 		AppendU32(out, 0); // filled in by EndBox
@@ -69,7 +69,7 @@ namespace qlm
 	}
 
 	// As BeginBox, for boxes that carry a version and flags field.
-	static size_t BeginFullBox(std::vector<uint8_t>& out, const char* type, uint8_t version, uint32_t flags)
+	inline size_t BeginFullBox(std::vector<uint8_t>& out, const char* type, uint8_t version, uint32_t flags)
 	{
 		const size_t size_position = BeginBox(out, type);
 		AppendU8(out, version);
@@ -79,7 +79,7 @@ namespace qlm
 		return size_position;
 	}
 
-	static void EndBox(std::vector<uint8_t>& out, size_t size_position)
+	inline void EndBox(std::vector<uint8_t>& out, size_t size_position)
 	{
 		const uint32_t size = static_cast<uint32_t>(out.size() - size_position);
 		out[size_position] = static_cast<uint8_t>((size >> 24) & 0xFF);
@@ -109,7 +109,7 @@ namespace qlm
 		bool failed = false;          // set when a NAL unit is rejected
 	};
 
-	static bool FileSeekTo(std::FILE* file, int64_t position)
+	inline bool FileSeekTo(std::FILE* file, int64_t position)
 	{
 	#if defined(_MSC_VER) || defined(__MINGW32__)
 		return _fseeki64(file, position, SEEK_SET) == 0;

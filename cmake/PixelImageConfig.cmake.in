@@ -3,3 +3,13 @@
 @PACKAGE_INIT@
 
 include ("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+
+# VideoReader decodes H.264 tracks with OpenH264, which stays a static library of its own
+# next to libPixelImage: a static library does not hold the objects of another one, so the
+# link interface of the installed library names the imported target below and a consumer
+# links both. Restating it here is what makes that name resolvable.
+if(NOT TARGET openh264::openh264)
+  add_library(openh264::openh264 STATIC IMPORTED)
+  set_target_properties(openh264::openh264 PROPERTIES
+    IMPORTED_LOCATION "${PACKAGE_PREFIX_DIR}/@INSTALL_LIB_DIR@/@OPENH264_LIBRARY_NAME@")
+endif()

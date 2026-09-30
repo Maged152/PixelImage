@@ -95,14 +95,14 @@ See [Random generation](random_generator.md).
 
 ### Video I/O
 
-Videos are read and written frame by frame as Motion-JPEG, so no video codec is involved.
+Videos are read and written frame by frame. `VideoWriter` encodes H.264 (the default, through the vendored `minih264` encoder) or Motion-JPEG (independent JPEG frames, which needs no video codec at all), and `VideoReader` decodes both — H.264 through the vendored `OpenH264` decoder, Motion-JPEG through `stb_image`.
 
 | | `GRAY` | `RGB` |
 |---|---|---|
 | `uint8_t` | ✅ | ✅ |
 | other `T` | ❌ link error | ❌ link error |
 
-See [Video](video.md) for the container details and [example3](../examples/example3.cpp) for a slideshow built from images.
+See [Video](video.md) for the container details, [example_video_writer](../examples/example_video_writer.cpp) for a slideshow built from images, and [example_video_reader](../examples/example_video_reader.cpp) for reading a video back and writing the frames after processing them.
 
 ## Documentation
 
@@ -113,4 +113,4 @@ See [Video](video.md) for the container details and [example3](../examples/examp
 | [Pixel formats](pixel_formats.md) | The five `Pixel` specializations: channels, constructors, `Set` overloads |
 | [Image](image.md) | Memory model, constructors, pixel access, `Copy`, border handling, `LoadFromFile` / `SaveToFile` |
 | [Random generation](random_generator.md) | `RandomGenerator`, `RandomPixel`, `Image::RandomInit`, determinism |
-| [Video](video.md) | `VideoReader`, `VideoWriter`, the Motion-JPEG MP4 container, frame timing |
+| [Video](video.md) | `VideoReader`, `VideoWriter`, the MP4 container, Motion-JPEG and H.264, frame timing |

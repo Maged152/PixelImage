@@ -48,6 +48,7 @@ namespace qlm
 		impl->decoded_width = width;
 		impl->decoded_height = height;
 		impl->decoded_channels = channels;
+		impl->planar = false;   // these pixels are what stb_image decoded, not a planar frame
 		impl->width = width;
 		impl->height = height;
 		impl->time = impl->timescale > 0 ? static_cast<double>(timestamp) / impl->timescale : 0.0;

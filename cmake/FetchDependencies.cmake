@@ -103,11 +103,12 @@ add_custom_command(
 
 add_custom_target(openh264_ext DEPENDS "${OPENH264_LIBRARY}")
 
-add_library(openh264 STATIC IMPORTED GLOBAL)
-add_dependencies(openh264 openh264_ext)
-set_target_properties(openh264 PROPERTIES
+# The target carries the canonical namespaced name itself. A static library states its
+# private dependencies to whoever links it, and the exported name is the name of the target,
+# so the configuration file of an installed PixelImage has to state exactly this one as well
+# (see cmake/PixelImageConfig.cmake.in).
+add_library(openh264::openh264 STATIC IMPORTED GLOBAL)
+add_dependencies(openh264::openh264 openh264_ext)
+set_target_properties(openh264::openh264 PROPERTIES
   IMPORTED_LOCATION             "${OPENH264_LIBRARY}"
   INTERFACE_INCLUDE_DIRECTORIES "${OPENH264_INCLUDE_DIR}")
-
-# Canonical namespaced alias consumed by target_link_libraries
-add_library(openh264::openh264 ALIAS openh264)

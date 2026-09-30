@@ -31,6 +31,10 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE openh264::openh264)
 add_dependencies(${PROJECT_NAME} openh264_ext)
 
+# The name the decoder archive has on this system, for the configuration file that states
+# where the installed package carries it (see cmake/PixelImageConfig.cmake.in).
+get_filename_component(OPENH264_LIBRARY_NAME "${OPENH264_LIBRARY}" NAME)
+
 set_target_properties(${PROJECT_NAME} PROPERTIES 
                         CXX_STANDARD 20
                         CXX_EXTENSIONS OFF)
@@ -58,6 +62,10 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${INSTALL_RUN_DIR}
     INCLUDES DESTINATION ${INSTALL_INC_DIR}
 )
+
+# The H.264 decoder archive goes next to the library itself: a consumer links both, because
+# a static library does not hold the objects of another one.
+install(FILES "${OPENH264_LIBRARY}" DESTINATION ${INSTALL_LIB_DIR})
 
 install(EXPORT "${TARGETS_EXPORT_NAME}"
     NAMESPACE "${namespace}"
