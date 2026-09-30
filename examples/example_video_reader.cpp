@@ -19,6 +19,7 @@ int main()
 
 	std::cout << "Input Video: " << reader.Width() << "x" << reader.Height()
 			  << " @ " << reader.FrameRate() << " fps, "
+			  << "format: " << (reader.Format() == qlm::VideoFormat::MP4_MJPEG ? "MP4_MJPEG" : "MP4_H264") << ", "
 			  << reader.FrameCount() << " frames ("
 			  << reader.Duration() << " seconds)\n";
 
