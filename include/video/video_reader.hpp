@@ -34,7 +34,7 @@ namespace qlm
 		VideoReader(const VideoReader&) = delete;
 		VideoReader& operator=(const VideoReader&) = delete;
 
-		bool LoadFromFile(const std::string& file_name);
+		bool Open(const std::string& file_name);
 		void Close();
 		bool IsOpen() const;
 

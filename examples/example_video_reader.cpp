@@ -11,7 +11,7 @@ int main()
 
 	// 1. Open the input video
 	qlm::VideoReader reader;
-	if (!reader.LoadFromFile(input_video))
+	if (!reader.Open(input_video))
 	{
 		std::cerr << "Failed to open input video: " << input_video << "\n";
 		return -1;
