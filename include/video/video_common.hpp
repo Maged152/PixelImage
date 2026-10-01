@@ -10,11 +10,12 @@ namespace qlm
 	//             is required and every frame is a random access point.
 	//
 	// MP4_H264  : the same container holding one H.264 (AVC) video track, written with
-	//             the 'avc1' sample entry. Frames are encoded by the vendored minih264
-	//             encoder and muxed by the vendored minimp4 multiplexer, so the files are
-	//             far smaller than Motion-JPEG files of the same clip, at the price of a
-	//             lossy inter-frame codec. See doc/video.md for the details, including
-	//             the frame size rule and how quality maps onto the H.264 quantizer.
+	//             the 'avc1' sample entry. Frames are encoded by the OpenH264 encoder
+	//             and muxed by the vendored minimp4 multiplexer, and read back by the
+	//             OpenH264 decoder, so the files are far smaller than Motion-JPEG files
+	//             of the same clip, at the price of a lossy inter-frame codec. See
+	//             doc/video.md for the details, including the frame size rule and how
+	//             quality maps onto the H.264 quantizer.
 	enum class VideoFormat
 	{
 		MP4_MJPEG,

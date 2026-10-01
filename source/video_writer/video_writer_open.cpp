@@ -32,11 +32,32 @@ namespace qlm
 				return false;
 			}
 
-			if (format == VideoFormat::MP4_H264 && (frame_width % 16 != 0 || frame_height % 16 != 0))
+			if (format == VideoFormat::MP4_H264)
 			{
-				std::cerr << "Error: for H.264 encoding, video dimensions must be multiples of 16."
-						  << std::endl;
-				return false;
+				// The 4:2:0 sampling of the encoder needs a chroma sample per 2 x 2 luma block.
+				if (frame_width % 2 != 0 || frame_height % 2 != 0)
+				{
+					std::cerr << "Error: for H.264 encoding, video dimensions must be even." << std::endl;
+					return false;
+				}
+
+				// The smallest picture the encoder accepts is one macroblock.
+				if (frame_width < 16 || frame_height < 16)
+				{
+					std::cerr << "Error: for H.264 encoding, video dimensions must be at least 16x16."
+							  << std::endl;
+					return false;
+				}
+
+				// The encoder limits the number of macroblocks per frame (MAX_MBS_PER_FRAME << 8).
+				constexpr int64_t max_h264_pixels = 9437184;
+				if (static_cast<int64_t>(frame_width) * frame_height > max_h264_pixels)
+				{
+					std::cerr << "Error: for H.264 encoding, " << frame_width << "x" << frame_height
+							  << " is more than the " << max_h264_pixels
+							  << " pixels the encoder supports in one picture." << std::endl;
+					return false;
+				}
 			}
 
 			return true;
@@ -64,19 +85,6 @@ namespace qlm
 		#else
 			return std::fopen(file_name.c_str(), "wb+");
 		#endif
-		}
-
-		// The encoder wants 64 byte aligned persistent and scratch buffers. The raw pointer
-		// is handed back as well, because only it can be released again.
-		uint8_t* AllocAligned(const size_t size, uint8_t** raw)
-		{
-			uint8_t* base = new uint8_t[size + 64];
-			*raw = base;
-
-			const size_t misaligned = static_cast<size_t>(reinterpret_cast<uintptr_t>(base) & 63u);
-			const size_t offset = misaligned == 0 ? 0 : 64 - misaligned;
-
-			return base + offset;
 		}
 
 		// quality grows with the image quality, the quantizer shrinks with it: 10 is close
@@ -150,37 +158,53 @@ namespace qlm
 				return false;
 			}
 
-			H264E_create_param_t create;
-			std::memset(&create, 0, sizeof(create));
+			// OpenH264 pads the size it is given up to whole macroblocks and records the size
+			// it was given as frame cropping in the SPS, so the buffer that is filled here
+			// holds the coded size while the frames are reported at the size they were
+			// written as.
+			impl->h264.coded_width = (frame_width + 15) & ~15;
+			impl->h264.coded_height = (frame_height + 15) & ~15;
+			impl->h264_quantizer = QualityToQuantizer(impl->quality);
 
-			create.width = frame_width;
-			create.height = frame_height;
-			create.gop = frame_rate;  // a key frame every second, the first frame is one too
-#if H264E_SVC_API
-			create.num_layers = 1;    // one AVC layer, no spatial scalability
-#endif
-#if defined(__ARM_NEON) || defined(_M_ARM64)
-			create.enableNEON = 1;
-#endif
-
-			int persist_bytes = 0;
-			int scratch_bytes = 0;
-
-			if (H264E_sizeof(&create, &persist_bytes, &scratch_bytes) != H264E_STATUS_SUCCESS ||
-				persist_bytes <= 0 || scratch_bytes <= 0)
+			if (WelsCreateSVCEncoder(&impl->h264.encoder) != 0 || impl->h264.encoder == nullptr)
 			{
-				std::cerr << "Error: cannot size the H.264 encoder for " << frame_width << "x"
-						  << frame_height << "." << std::endl;
+				std::cerr << "Error: cannot create the H.264 encoder." << std::endl;
 				Close();
 				return false;
 			}
 
-			impl->h264.encoder = reinterpret_cast<H264E_persist_t*>(
-				AllocAligned(static_cast<size_t>(persist_bytes), &impl->h264_encoder_storage));
-			impl->h264.scratch = reinterpret_cast<H264E_scratch_t*>(
-				AllocAligned(static_cast<size_t>(scratch_bytes), &impl->h264_scratch_storage));
+			// The defaults come first: the encoder rejects a parameter set that leaves a
+			// field it needs at zero.
+			SEncParamExt params;
+			impl->h264.encoder->GetDefaultParams(&params);
 
-			if (H264E_init(impl->h264.encoder, &create) != H264E_STATUS_SUCCESS)
+			params.iUsageType = CAMERA_VIDEO_REAL_TIME; // one frame in, one frame out, no lookahead
+			params.iPicWidth = frame_width;             // the size the caller asked for
+			params.iPicHeight = frame_height;
+			params.iRCMode = RC_OFF_MODE;               // constant quantizer, no bit rate target
+			params.fMaxFrameRate = static_cast<float>(frame_rate);
+			params.iTemporalLayerNum = 1;               // no temporal scalability
+			params.iSpatialLayerNum = 1;                // one spatial layer: plain AVC
+			params.uiIntraPeriod = static_cast<unsigned int>(frame_rate); // key frame every second
+			params.eSpsPpsIdStrategy = CONSTANT_ID;     // the parameter sets never change, so the
+													   // multiplexer records them in avcC once
+			params.bPrefixNalAddingCtrl = false;        // no prefix NAL units
+			params.bEnableFrameCroppingFlag = true;     // record the padding as cropping
+			params.bEnableFrameSkip = false;            // a skipped frame would desync frames_written
+			params.iMultipleThreadIdc = 1;              // one thread, so the output is reproducible
+			params.iEntropyCodingModeFlag = 1;          // CABAC, the smaller of the two encodings
+
+			SSpatialLayerConfig& layer = params.sSpatialLayers[0];
+			layer.iVideoWidth = frame_width;
+			layer.iVideoHeight = frame_height;
+			layer.fFrameRate = static_cast<float>(frame_rate);
+			layer.iSpatialBitrate = 0;                  // unused while the rate control is off
+			layer.iDLayerQp = impl->h264_quantizer;
+			layer.uiProfileIdc = PRO_UNKNOWN;           // let the encoder pick the profile
+			layer.uiLevelIdc = LEVEL_UNKNOWN;
+			layer.sSliceArgument.uiSliceMode = SM_SINGLE_SLICE;
+
+			if (impl->h264.encoder->InitializeExt(&params) != 0)
 			{
 				std::cerr << "Error: cannot start the H.264 encoder for " << frame_width << "x"
 						  << frame_height << "." << std::endl;
@@ -188,9 +212,20 @@ namespace qlm
 				return false;
 			}
 
-			impl->h264.i420.resize(static_cast<size_t>(frame_width) * frame_height * 3 / 2);
+			// The encoder announces itself and reports every frame on the standard streams
+			int trace_level = WELS_LOG_QUIET;
+			impl->h264.encoder->SetOption(ENCODER_OPTION_TRACE_LEVEL, &trace_level);
+
+			impl->h264.picture.iColorFormat = videoFormatI420;
+			impl->h264.picture.iPicWidth = frame_width;
+			impl->h264.picture.iPicHeight = frame_height;
+			impl->h264.picture.iStride[0] = impl->h264.coded_width;
+			impl->h264.picture.iStride[1] = impl->h264.coded_width / 2;
+			impl->h264.picture.iStride[2] = impl->h264.coded_width / 2;
+
+			impl->h264.i420.resize(static_cast<size_t>(impl->h264.coded_width)
+								   * impl->h264.coded_height * 3 / 2);
 			impl->h264.frame_ticks = 90000 / frame_rate;
-			impl->h264_quantizer = QualityToQuantizer(impl->quality);
 		}
 		else
 		{

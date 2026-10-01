@@ -95,7 +95,7 @@ See [Random generation](random_generator.md).
 
 ### Video I/O
 
-Videos are read and written frame by frame. `VideoWriter` encodes H.264 (the default, through the vendored `minih264` encoder) or Motion-JPEG (independent JPEG frames, which needs no video codec at all), and `VideoReader` decodes both — H.264 through the vendored `OpenH264` decoder, Motion-JPEG through `stb_image`.
+Videos are read and written frame by frame. `VideoWriter` encodes H.264 (the default, through the `OpenH264` encoder) or Motion-JPEG (independent JPEG frames, which needs no video codec at all), and `VideoReader` decodes both — H.264 through the vendored `OpenH264` decoder, Motion-JPEG through `stb_image`.
 
 | | `GRAY` | `RGB` |
 |---|---|---|

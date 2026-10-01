@@ -47,8 +47,10 @@ namespace qlm
 		// quality is 1 (worst) to 100 (best). It is the JPEG quality for MP4_MJPEG and is
 		// mapped onto the H.264 quantizer for MP4_H264 (see doc/video.md for the table).
 		//
-		// MP4_H264 requires frame_width and frame_height to be multiples of 16, which is
-		// what the encoder works on; MP4_MJPEG accepts any size up to 65535.
+		// MP4_H264 requires frame_width and frame_height to be even and at least 16, and at
+		// most 9437184 pixels in the frame; the encoder codes whole macroblocks and records
+		// the padding as cropping, so the frame reads back at the size it was written as.
+		// MP4_MJPEG accepts any size up to 65535.
 		bool Open(const std::string& file_name, int frame_width, int frame_height, int frame_rate,
 				  int quality = 90, VideoFormat format = VideoFormat::MP4_H264);
 

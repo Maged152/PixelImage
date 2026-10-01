@@ -224,14 +224,16 @@ namespace qlm
 			}
 
 			// The encoder is only needed while the file is open
-			delete[] impl->h264_encoder_storage;
-			delete[] impl->h264_scratch_storage;
-			impl->h264_encoder_storage = nullptr;
-			impl->h264_scratch_storage = nullptr;
-			impl->h264.encoder = nullptr;
-			impl->h264.scratch = nullptr;
+			if (impl->h264.encoder != nullptr)
+			{
+				impl->h264.encoder->Uninitialize();
+				WelsDestroySVCEncoder(impl->h264.encoder);
+				impl->h264.encoder = nullptr;
+			}
+
+			impl->h264.picture = SSourcePicture{};
 			impl->h264.i420.clear();
-			impl->h264.failed = false;
+			impl->h264.frame_index = 0;
 
 			std::fclose(impl->file);
 			impl->file = nullptr;

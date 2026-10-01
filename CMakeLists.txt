@@ -21,13 +21,14 @@ set(INSTALL_RUN_DIR "dll")
 set(INSTALL_CFG_DIR "cmake")
 
 # Source files
-file(GLOB_RECURSE SOURCES source/*.cpp source/*.c)
+file(GLOB_RECURSE SOURCES source/*.cpp)
 
 # Create the static library
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
-# The H.264 decoder (OpenH264) VideoReader reads H.264 tracks with. Its library is built by
-# cmake/FetchDependencies.cmake, so the dependency on that build has to be stated.
+# The H.264 codec (OpenH264): VideoReader reads H.264 tracks with its decoder and
+# VideoWriter writes them with its encoder. Both live in one library, which
+# cmake/FetchDependencies.cmake builds, so the dependency on that build has to be stated.
 target_link_libraries(${PROJECT_NAME} PRIVATE openh264::openh264)
 add_dependencies(${PROJECT_NAME} openh264_ext)
 
@@ -72,8 +73,10 @@ install(EXPORT "${TARGETS_EXPORT_NAME}"
     DESTINATION "${INSTALL_CFG_DIR}"
 )
 
+# No public header includes a dependency header, so only the library headers are
+# installed; the vendored sources stay part of the library.
 install(
-    DIRECTORY include/ dependencies/
+    DIRECTORY include/
     DESTINATION ${INSTALL_INC_DIR}
     FILES_MATCHING PATTERN "*.hpp"
 )

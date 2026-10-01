@@ -20,29 +20,6 @@ namespace qlm
 			return static_cast<uint8_t>(((112 * r - 94 * g - 18 * b) >> 8) + 128);
 		}
 
-		void AppendNalu(const unsigned char* nalu_data, int sizeof_nalu_data, void* token)
-		{
-			constexpr int start_code_bytes = 4;
-			H264State* state = static_cast<H264State*>(token);
-
-			if (state->failed)
-				return;
-
-			const unsigned char* nal = nalu_data - start_code_bytes;
-
-			// The encoder writes the start code itself, only the payload is reported
-			if (nal[0] != 0 || nal[1] != 0 || nal[2] != 0 || nal[3] != 1)
-			{
-				state->failed = true;
-				return;
-			}
-
-			if (mp4_h26x_write_nal(&state->writer, nal, sizeof_nalu_data + start_code_bytes,
-								   state->frame_ticks) != MP4E_STATUS_OK)
-				state->failed = true;
-		}
-	
-		// stb_image_write callback that appends the encoded JPEG to a vector.
 		void AppendJpegData(void* context, void* data, int size)
 		{
 			std::vector<uint8_t>* out = static_cast<std::vector<uint8_t>*>(context);
@@ -53,43 +30,49 @@ namespace qlm
 
 	// Converts packed RGB (components = 3) or grayscale (components = 1) pixels into the
 	// planar 4:2:0 frame the H.264 encoder expects: a full size luma plane followed by the
-	// two half size chroma planes. Chroma is averaged over every 2 x 2 block; because the
-	// frame size is a multiple of 16, the blocks always cover the frame completely.
+	// two half size chroma planes. Chroma is averaged over every 2 x 2 block. The encoder
+	// codes the size rounded up to whole macroblocks, so the last real column and row are
+	// repeated into the margin; the encoder records that margin as frame cropping, so it
+	// never reaches the decoded picture.
 	void VideoWriter::ToI420(const void* pixels, int components)
 	{
 		const uint8_t* source = static_cast<const uint8_t*>(pixels);
 		const int width = impl->width;
 		const int height = impl->height;
-		const int chroma_width = width / 2;
+		const int coded_width = impl->h264.coded_width;
+		const int coded_height = impl->h264.coded_height;
+		const int chroma_width = coded_width / 2;
+		const int chroma_height = coded_height / 2;
 
 		uint8_t* y_plane = impl->h264.i420.data();
-		uint8_t* u_plane = y_plane + static_cast<size_t>(width) * height;
-		uint8_t* v_plane = u_plane + static_cast<size_t>(chroma_width) * (height / 2);
+		uint8_t* u_plane = y_plane + static_cast<size_t>(coded_width) * coded_height;
+		uint8_t* v_plane = u_plane + static_cast<size_t>(chroma_width) * chroma_height;
 
-		for (int y = 0; y < height; y++)
+		// Sampling the source with clamped coordinates fills the coded picture in one pass:
+		// inside it the coordinate is the pixel itself, in the margin it is the edge pixel.
+		for (int y = 0; y < coded_height; y++)
 		{
-			uint8_t* y_row = y_plane + static_cast<size_t>(y) * width;
+			const int source_y = std::min(y, height - 1);
+			uint8_t* y_row = y_plane + static_cast<size_t>(y) * coded_width;
 
-			for (int x = 0; x < width; x++)
+			for (int x = 0; x < coded_width; x++)
 			{
-				if (components >= 3)
-				{
-					const size_t index = (static_cast<size_t>(y) * width + x) * 3;
-					y_row[x] = Luma(source[index], source[index + 1], source[index + 2]);
-				}
-				else
-					y_row[x] = Luma(source[static_cast<size_t>(y) * width + x],
-									source[static_cast<size_t>(y) * width + x],
-									source[static_cast<size_t>(y) * width + x]);
+				const size_t index = (static_cast<size_t>(source_y) * width + std::min(x, width - 1))
+									 * components;
+				const uint8_t r = source[index];
+				const uint8_t g = components >= 3 ? source[index + 1] : source[index];
+				const uint8_t b = components >= 3 ? source[index + 2] : source[index];
+
+				y_row[x] = Luma(r, g, b);
 			}
 		}
 
-		for (int y = 0; y < height; y += 2)
+		for (int y = 0; y < chroma_height; y++)
 		{
-			uint8_t* u_row = u_plane + static_cast<size_t>(y / 2) * chroma_width;
-			uint8_t* v_row = v_plane + static_cast<size_t>(y / 2) * chroma_width;
+			uint8_t* u_row = u_plane + static_cast<size_t>(y) * chroma_width;
+			uint8_t* v_row = v_plane + static_cast<size_t>(y) * chroma_width;
 
-			for (int x = 0; x < width; x += 2)
+			for (int x = 0; x < chroma_width; x++)
 			{
 				int u_sum = 0;
 				int v_sum = 0;
@@ -98,7 +81,10 @@ namespace qlm
 				{
 					for (int dx = 0; dx < 2; dx++)
 					{
-						const size_t index = (static_cast<size_t>(y + dy) * width + x + dx) * components;
+						const int source_y = std::min(y * 2 + dy, height - 1);
+						const int source_x = std::min(x * 2 + dx, width - 1);
+						const size_t index = (static_cast<size_t>(source_y) * width + source_x)
+											 * components;
 						const uint8_t r = source[index];
 						const uint8_t g = components >= 3 ? source[index + 1] : source[index];
 						const uint8_t b = components >= 3 ? source[index + 2] : source[index];
@@ -108,62 +94,66 @@ namespace qlm
 					}
 				}
 
-				u_row[x / 2] = static_cast<uint8_t>((u_sum + 2) / 4);
-				v_row[x / 2] = static_cast<uint8_t>((v_sum + 2) / 4);
+				u_row[x] = static_cast<uint8_t>((u_sum + 2) / 4);
+				v_row[x] = static_cast<uint8_t>((v_sum + 2) / 4);
 			}
 		}
 	}
 
 	bool VideoWriter::EncodeH264(const void* pixels, int components)
 	{
-		if (impl->h264.encoder == nullptr || impl->h264.scratch == nullptr)
+		if (impl->h264.encoder == nullptr)
 			return false;
 
 		ToI420(pixels, components);
 
-		const int width = impl->width;
-		const int height = impl->height;
+		const size_t luma_size = static_cast<size_t>(impl->h264.coded_width) * impl->h264.coded_height;
 		uint8_t* y_plane = impl->h264.i420.data();
 
-		H264E_io_yuv_t frame;
-		std::memset(&frame, 0, sizeof(frame));
-		frame.yuv[0] = y_plane;
-		frame.stride[0] = width;
-		frame.yuv[1] = y_plane + static_cast<size_t>(width) * height;
-		frame.stride[1] = width / 2;
-		frame.yuv[2] = y_plane + static_cast<size_t>(width) * height * 5 / 4;
-		frame.stride[2] = width / 2;
+		impl->h264.picture.pData[0] = y_plane;
+		impl->h264.picture.pData[1] = y_plane + luma_size;
+		impl->h264.picture.pData[2] = y_plane + luma_size + luma_size / 4;
+		impl->h264.picture.uiTimeStamp = static_cast<long long>(impl->h264.frame_index) * 1000
+										 / impl->frame_rate;
 
-		H264E_run_param_t run;
-		std::memset(&run, 0, sizeof(run));
-		run.encode_speed = H264E_SPEED_BALANCED;
-		run.frame_type = H264E_FRAME_TYPE_DEFAULT; // the GOP size of the encoder decides
-		run.qp_min = impl->h264_quantizer;         // both bounds equal: constant quality
-		run.qp_max = impl->h264_quantizer;
-		run.nalu_callback = &AppendNalu;
-		run.nalu_callback_token = &impl->h264;
+		SFrameBSInfo info;
+		std::memset(&info, 0, sizeof(info));
 
-		// The encoder reports the NAL units through the callback, which forwards them to
-		// the multiplexer, so the buffer it points to here is not used.
-		uint8_t* coded_data = nullptr;
-		int sizeof_coded_data = 0;
+		const int error = impl->h264.encoder->EncodeFrame(&impl->h264.picture, &info);
 
-		const int error = H264E_encode(impl->h264.encoder, impl->h264.scratch, &run, &frame,
-									   &coded_data, &sizeof_coded_data);
-
-		if (error != H264E_STATUS_SUCCESS)
+		if (error != cmResultSuccess)
 		{
 			std::cerr << "Error: failed to encode an H.264 frame (encoder status " << error << ")." << std::endl;
 			return false;
 		}
 
-		if (impl->h264.failed)
+		// The access unit arrives as a list of layers, each holding a list of NAL units,
+		// and every NAL unit carries the start code the multiplexer expects. The
+		// multiplexer collects the parameter sets of the first frame into the avcC box,
+		// marks the frames that the encoder made key frames as sync samples and builds the
+		// sample table, so nothing of that has to be tracked here.
+		for (int layer_index = 0; layer_index < info.iLayerNum; layer_index++)
 		{
-			std::cerr << "Error: failed to store an H.264 frame in the video file " << impl->file_name << "." << std::endl;
-			impl->h264.failed = false;
-			return false;
+			const SLayerBSInfo& layer = info.sLayerInfo[layer_index];
+			const unsigned char* nal = layer.pBsBuf;
+
+			for (int nal_index = 0; nal_index < layer.iNalCount; nal_index++)
+			{
+				const int nal_size = layer.pNalLengthInByte[nal_index];
+
+				if (mp4_h26x_write_nal(&impl->h264.writer, nal, nal_size,
+									   impl->h264.frame_ticks) != MP4E_STATUS_OK)
+				{
+					std::cerr << "Error: failed to store an H.264 frame in the video file "
+							  << impl->file_name << "." << std::endl;
+					return false;
+				}
+
+				nal += nal_size;
+			}
 		}
 
+		impl->h264.frame_index++;
 		impl->frames_written++;
 
 		return true;

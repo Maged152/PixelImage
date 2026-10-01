@@ -1,7 +1,8 @@
 include(FetchContent)
 
 ###################################### OpenH264 ######################################
-# The H.264 decoder VideoReader reads H.264 tracks with.
+# The H.264 codec: VideoReader reads H.264 tracks with the decoder of this library and
+# VideoWriter writes them with its encoder.
 #
 # Only the source of OpenH264 is fetched, not its CMakeLists.txt: the library is built
 # here by the Makefile the project ships, which is the build system its own authors

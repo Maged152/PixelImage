@@ -5,9 +5,9 @@ Two classes read and write video files, one frame at a time:
 | Component | Role |
 |---|---|
 | [`VideoReader`](#videoreader) | Demuxes an MP4 container (minimp4) and decodes every frame with `stb_image` (Motion-JPEG) or `OpenH264` (H.264) |
-| [`VideoWriter`](#videowriter) | Encodes every frame (Motion-JPEG via `stb_image_write` or H.264 via `minih264`) and muxes an MP4 container |
+| [`VideoWriter`](#videowriter) | Encodes every frame (Motion-JPEG via `stb_image_write` or H.264 via `OpenH264`) and muxes an MP4 container |
 
-`VideoWriter` writes **H.264** by default (`VideoFormat::MP4_H264`): frames are encoded by the vendored `minih264` encoder, muxed into a standard `avc1` MP4 track by the vendored `minimp4`, and read back by the vendored `OpenH264` decoder. That is what keeps video files small.
+`VideoWriter` writes **H.264** by default (`VideoFormat::MP4_H264`): frames are encoded by the vendored `OpenH264` encoder, muxed into a standard `avc1` MP4 track by the vendored `minimp4`, and read back by the `OpenH264` decoder that is built with it. That is what keeps video files small.
 
 **Motion-JPEG** (`VideoFormat::MP4_MJPEG`) is the other option, and the one to pick when no video codec should be involved at all: every frame is an independent JPEG image, written by `stb_image_write` and read by `stb_image`, which makes every frame a random access point at the cost of file size.
 
@@ -29,7 +29,7 @@ Sources: [`include/video/video_reader.hpp`](../include/video/video_reader.hpp) �
 
 When writing Motion-JPEG (`VideoFormat::MP4_MJPEG`), every frame is stored as a self-contained JPEG still image.
 
-When writing H.264 (`VideoFormat::MP4_H264`), input frames are converted to BT.601 planar I420 and encoded with a single-threaded H.264 encoder into Annex-B NAL units, packaged into standard `avc1` / `avcC` tracks. Frame dimensions for H.264 **must be multiples of 16** (macroblock constraint).
+When writing H.264 (`VideoFormat::MP4_H264`), input frames are converted to BT.601 planar I420 and encoded with a single-threaded H.264 encoder into Annex-B NAL units, packaged into standard `avc1` / `avcC` tracks. Frame dimensions for H.264 must be **even and at least 16x16**; the encoder codes them padded up to whole macroblocks and records the padding as frame cropping, so a frame reads back at exactly the size it was written as. At most 9,437,184 pixels (about 9.4 MP) per frame.
 
 Reading supports both Motion-JPEG (one-component grayscale and three-component JPEG samples) and H.264 (8-bit 4:2:0 streams decoded via `OpenH264`). A grayscale sample read into an `RGB` image is replicated over the three channels.
 
@@ -41,7 +41,7 @@ namespace qlm
     enum class VideoFormat
     {
         MP4_MJPEG,  // Motion-JPEG frames in an MP4 container
-        MP4_H264    // H.264 video in an MP4 container (the default; needs width & height % 16 == 0)
+        MP4_H264    // H.264 video in an MP4 container (the default; needs even sizes)
     };
 
     class VideoWriter
@@ -73,7 +73,7 @@ A writer owns an open file between `Open` and `Close`, so it is **movable but no
 | Parameter | Description |
 |---|---|
 | `file_name` | Path of the file to create; an existing file is truncated |
-| `frame_width`, `frame_height` | Size of every frame; each side must be between 1 and 65535. For `MP4_H264`, both must also be multiples of 16 |
+| `frame_width`, `frame_height` | Size of every frame; each side must be between 1 and 65535. For `MP4_H264`, both must be even, at least 16, and the frame at most 9437184 pixels |
 | `frame_rate` | Frames per second, stored in the container exactly (an integer, e.g. 24, 25, 30, 60) |
 | `quality` | `1` (smallest) to `100` (best); clamped, `90` by default. For `MP4_MJPEG`, maps directly to JPEG quality. For `MP4_H264`, maps linearly to QP 51 (quality 1) down to QP 10 (quality 100) |
 | `format` | Container and codec combination (`MP4_H264` by default, or `MP4_MJPEG`) |
@@ -204,8 +204,8 @@ reader.ReadFrame(45, frame);       // frame 45, the middle of the second image a
 ## Known limitations
 
 - **H.264 format support in `VideoReader`.** `VideoReader` decodes standard 8-bit 4:2:0 H.264 streams; 10-bit and 4:2:2/4:4:4 streams are rejected.
-- **H.264 reading is built, not vendored as source.** `cmake/FetchDependencies.cmake` fetches OpenH264 and builds it with the Makefile the project ships, which needs GNU make and a shell — the `gnu_*` presets provide both, and any other generator is rejected with a message that says so.
-- **H.264 macroblock alignment.** Writing with `VideoFormat::MP4_H264` requires both frame width and frame height to be integer multiples of 16.
+- **H.264 is built, not vendored as source.** `cmake/FetchDependencies.cmake` fetches OpenH264 and builds it with the Makefile the project ships, which needs GNU make and a shell — the `gnu_*` presets provide both, and any other generator is rejected with a message that says so.
+- **H.264 does not need macroblock sizes.** Writing with `VideoFormat::MP4_H264` needs an even width and height of at least 16, but not a multiple of 16: the encoder codes whole macroblocks and records the difference as frame cropping, so the frame reads back at exactly the size it was written as.
 - **No audio.** An audio track in a file that is read is ignored, and none is written.
 - **Every frame has one size.** Images of different sizes have to be placed on a common canvas before they are written; the size is fixed by `Open`.
 - **The whole file is read into memory.** `VideoReader::Open` keeps the container in memory, so very large videos need proportional RAM.

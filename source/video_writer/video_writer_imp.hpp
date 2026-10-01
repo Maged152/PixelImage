@@ -1,5 +1,5 @@
 #include "video.hpp"
-#include "minih264/minih264e.h"
+#include "codec_api.h"
 #include "minimp4/minimp4.h"
 #include "stb/stb_image_write.h"
 
@@ -91,21 +91,28 @@ namespace qlm
 	// ---------------------------------------------------------------------------------
 	// H.264 writing (VideoFormat::MP4_H264).
 	//
-	// minih264 encodes one frame at a time and reports every NAL unit of that frame
-	// through a callback. The callback forwards the NAL units, start code included, to
-	// minimp4's H.264 multiplexer, which collects the SPS/PPS into an avcC box, marks
-	// the IDR frames as sync samples (stss) and builds the sample table. The track
-	// timescale is 90000, so the duration of a frame is exact for the whole-number
+	// OpenH264 encodes one frame at a time and reports the access unit of that frame as a
+	// list of layers, each holding a list of NAL units that include their start code. Every
+	// NAL unit is forwarded to minimp4's H.264 multiplexer, which collects the SPS/PPS into
+	// an avcC box, marks the IDR frames as sync samples (stss) and builds the sample table.
+	// The track timescale is 90000, so the duration of a frame is exact for the whole-number
 	// frame rates the writer accepts (90000 / frame_rate).
+	//
+	// The encoder codes whole macroblocks and records the size it was given as frame
+	// cropping in the SPS, so a frame that is not a multiple of 16 wide or high is coded
+	// padded and decoded back at the size it was written as.
 	// ---------------------------------------------------------------------------------
 	struct H264State
 	{
 		MP4E_mux_t* mux = nullptr;
 		mp4_h26x_writer_t writer{};
-		H264E_persist_t* encoder = nullptr;
-		H264E_scratch_t* scratch = nullptr;
+		ISVCEncoder* encoder = nullptr;
+		SSourcePicture picture{};     // where the frame passed to EncodeFrame lives
 		std::vector<uint8_t> i420;    // frame in the planar 4:2:0 layout the encoder wants
+		int coded_width = 0;          // i420 width, and the luma stride: the width rounded up to 16
+		int coded_height = 0;         // i420 height, in luma rows
 		int frame_ticks = 0;          // duration of one frame, in 90 kHz units
+		int frame_index = 0;          // counts the frames, for the timestamps the encoder is told
 		bool failed = false;          // set when a NAL unit is rejected
 	};
 
@@ -141,8 +148,6 @@ namespace qlm
 		// H.264 path
 		VideoFormat format = VideoFormat::MP4_MJPEG;
 		H264State h264;
-		uint8_t* h264_encoder_storage = nullptr;  // raw allocations behind h264.encoder
-		uint8_t* h264_scratch_storage = nullptr;  // raw allocations behind h264.scratch
 		int h264_quantizer = 33;
 
 		// Number of frames accepted by WriteFrame, both formats
