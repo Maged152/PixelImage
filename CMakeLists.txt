@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(PixelImage VERSION 0.0.1)
 
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    set(PARENT_PROJECT_NAME ${PROJECT_NAME})
-    option(PixelImage_BUILD_EXAMPLES "Enable examples" ON)
-endif()
-
 List (APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(FetchDependencies)
 
@@ -19,6 +14,13 @@ set(INSTALL_BIN_DIR "bin")
 set(INSTALL_LIB_DIR "lib")
 set(INSTALL_RUN_DIR "dll")
 set(INSTALL_CFG_DIR "cmake")
+
+# Enable CTest/examples and options only for the main project
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    include(CTest)
+    option(PixelImage_BUILD_TESTING "Enable testing" ON)
+    option(PixelImage_BUILD_EXAMPLES "Enable examples" ON)
+endif()
 
 # Source files
 file(GLOB_RECURSE SOURCES source/*.cpp)
@@ -54,6 +56,11 @@ if(PixelImage_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
+# Check if testing is enabled
+if(PixelImage_BUILD_TESTING AND BUILD_TESTING)
+    message(STATUS "Testing for ${PROJECT_NAME} is enabled")
+    # add_subdirectory(tests)
+endif()
 
 # Install the library
 install(TARGETS ${PROJECT_NAME}
