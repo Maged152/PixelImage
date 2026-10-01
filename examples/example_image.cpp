@@ -3,7 +3,7 @@
 
 int main()
 {
-    std::string file_name = "image.jpg";
+    std::string file_name = "./tests/data/image0.jpg";
 	// load the image
 	qlm::Image<qlm::ImageFormat::RGB, uint8_t> in;
 	if (!in.LoadFromFile(file_name))
