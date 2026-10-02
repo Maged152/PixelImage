@@ -6,8 +6,8 @@
 
 int main()
 {
-	const std::string input_video = "./tests/data/images_slide_show.mp4";
-	const std::string output_video = "processed_slide_show.mp4";
+	const std::string input_video = "./tests/data/car_30fps.mp4";
+	const std::string output_video = "bright_car_30fps.mp4";
 
 	// 1. Open the input video
 	qlm::VideoReader reader;
