@@ -1,14 +1,20 @@
 #include <PixelImage.hpp>
 #include <iostream>
+#include <string>
 
-int main()
+int main(int argc, char* argv[])
 {
-    std::string file_name = "./tests/data/image0.jpg";
+    std::string in_dir = (argc > 1) ? argv[1] : "./tests/data";
+    std::string out_dir = (argc > 2) ? argv[2] : ".";
+
+    const std::string in_file = in_dir + "/image0.jpg";
+    const std::string out_file = out_dir + "/output.jpg";
+
 	// load the image
 	qlm::Image<qlm::ImageFormat::RGB, uint8_t> in;
-	if (!in.LoadFromFile(file_name))
+	if (!in.LoadFromFile(in_file))
 	{
-		std::cout << "Failed to read the image\n";
+		std::cout << "Failed to read the image: " << in_file << "\n";
 		return -1;
 	}
 	// check alpha component
@@ -36,9 +42,12 @@ int main()
     }
 
     // Save the image
-    if (!in.SaveToFile("output.jpg", alpha))
+    if (!in.SaveToFile(out_file, alpha))
     {
-        std::cout << "Failed to save the image\n";
+        std::cout << "Failed to save the image: " << out_file << "\n";
         return -1;
     }
+
+    std::cout << "wrote " << out_file << "\n";
+    return 0;
 }

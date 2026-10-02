@@ -4,13 +4,17 @@
 #include <string>
 
 
-int main()
+int main(int argc, char* argv[])
 {
 	const int frame_rate = 30;                       // frames per second
 	const double seconds_per_image = 1.0;            // how long every image stays on screen
 	const int frames_per_image = frame_rate * seconds_per_image;
-	const std::string images_path = "./tests/data/";
-	const std::string file_name = "images_slide_show.mp4";
+	
+	const std::string in_dir = (argc > 1) ? argv[1] : "./tests/data";
+	const std::string out_dir = (argc > 2) ? argv[2] : ".";
+
+	const std::string images_path = in_dir + "/";
+	const std::string file_name = out_dir + "/images_slide_show.mp4";
 
 	// 1. Read the images.
 	using ImageRGB = qlm::Image<qlm::ImageFormat::RGB, uint8_t>;
@@ -90,4 +94,5 @@ int main()
 	
 
 	std::cout << "wrote " << file_name << ", play it with any MP4 player\n";
+	return 0;
 }

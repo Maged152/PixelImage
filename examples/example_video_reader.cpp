@@ -4,10 +4,13 @@
 #include <iostream>
 #include <string>
 
-int main()
+int main(int argc, char* argv[])
 {
-	const std::string input_video = "./tests/data/car_30fps.mp4";
-	const std::string output_video = "bright_car_30fps.mp4";
+	const std::string in_dir = (argc > 1) ? argv[1] : "./tests/data";
+	const std::string out_dir = (argc > 2) ? argv[2] : ".";
+
+	const std::string input_video = in_dir + "/car_30fps.mp4";
+	const std::string output_video = out_dir + "/bright_car_30fps.mp4";
 
 	// 1. Open the input video
 	qlm::VideoReader reader;

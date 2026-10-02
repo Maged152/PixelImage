@@ -59,7 +59,7 @@ endif()
 # Check if testing is enabled
 if(PixelImage_BUILD_TESTING AND BUILD_TESTING)
     message(STATUS "Testing for ${PROJECT_NAME} is enabled")
-    # add_subdirectory(tests)
+    add_subdirectory(tests)
 endif()
 
 # Install the library
