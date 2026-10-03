@@ -2,14 +2,34 @@
 
 @PACKAGE_INIT@
 
-include ("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
 
-# VideoReader decodes H.264 tracks with OpenH264, which stays a static library of its own
-# next to libPixelImage: a static library does not hold the objects of another one, so the
-# link interface of the installed library names the imported target below and a consumer
-# links both. Restating it here is what makes that name resolvable.
+# OpenH264 is a private static dependency of PixelImage.
+# It is installed as a separate archive next to libPixelImage because a static
+# library does not contain the objects of its static dependencies.
+#
+# The build-tree OpenH264 target is created by OpenH264.cmake. When PixelImage
+# is consumed from an installed package, that target no longer exists, so it
+# must be recreated here.
 if(NOT TARGET openh264::openh264)
-  add_library(openh264::openh264 STATIC IMPORTED)
-  set_target_properties(openh264::openh264 PROPERTIES
-    IMPORTED_LOCATION "${PACKAGE_PREFIX_DIR}/@INSTALL_LIB_DIR@/@OPENH264_LIBRARY_NAME@")
+    add_library(openh264::openh264 STATIC IMPORTED)
+
+    set_target_properties(openh264::openh264 PROPERTIES
+        IMPORTED_LOCATION
+            "${PACKAGE_PREFIX_DIR}/@INSTALL_LIB_DIR@/@OPENH264_LIBRARY_NAME@"
+        IMPORTED_LINK_INTERFACE_LANGUAGES
+            CXX
+    )
+
+    # OpenH264 uses pthreads on non-Windows platforms.
+    # Recreate the same transitive link dependency that the build-tree target has.
+    if(NOT WIN32)
+        include(CMakeFindDependencyMacro)
+        find_dependency(Threads)
+
+        set_property(
+            TARGET openh264::openh264
+            PROPERTY INTERFACE_LINK_LIBRARIES Threads::Threads
+        )
+    endif()
 endif()

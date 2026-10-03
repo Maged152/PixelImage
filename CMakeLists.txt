@@ -32,7 +32,6 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 # VideoWriter writes them with its encoder. Both live in one library, which
 # cmake/FetchDependencies.cmake builds, so the dependency on that build has to be stated.
 target_link_libraries(${PROJECT_NAME} PRIVATE openh264::openh264)
-add_dependencies(${PROJECT_NAME} openh264_ext)
 
 # The name the decoder archive has on this system, for the configuration file that states
 # where the installed package carries it (see cmake/PixelImageConfig.cmake.in).
