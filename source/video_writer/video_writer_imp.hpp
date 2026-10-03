@@ -113,7 +113,6 @@ namespace qlm
 		int coded_height = 0;         // i420 height, in luma rows
 		int frame_ticks = 0;          // duration of one frame, in 90 kHz units
 		int frame_index = 0;          // counts the frames, for the timestamps the encoder is told
-		bool failed = false;          // set when a NAL unit is rejected
 	};
 
 	inline bool FileSeekTo(std::FILE* file, int64_t position)

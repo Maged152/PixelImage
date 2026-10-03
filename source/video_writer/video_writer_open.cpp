@@ -94,17 +94,6 @@ namespace qlm
 			return std::clamp(51 - (quality * 41) / 100, 10, 51);
 		}
 
-		/*************************** Motion-JPEG  ***************************/
-		
-
-		int64_t FilePosition(std::FILE* file)
-		{
-		#if defined(_MSC_VER) || defined(__MINGW32__)
-			return static_cast<int64_t>(_ftelli64(file));
-		#else
-			return static_cast<int64_t>(std::ftell(file));
-		#endif
-		}
 	}
 
 	bool VideoWriter::Open(const std::string& file_name, int frame_width, int frame_height, int frame_rate,
@@ -252,8 +241,9 @@ namespace qlm
 				return false;
 			}
 
-			// The samples follow the header directly, so the payload position is known here.
-			impl->mdat_payload_position = static_cast<uint64_t>(FilePosition(impl->file));
+			// The header is written from the start of the file, so the first sample begins
+			// right after it.
+			impl->mdat_payload_position = static_cast<uint64_t>(header.size());
 		}
 
 		return true;

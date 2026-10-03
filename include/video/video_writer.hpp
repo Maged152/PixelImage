@@ -24,6 +24,9 @@ namespace qlm
 
 		bool EncodeFrame(const void* pixels, int components);
 
+		// Rejects (and reports) a frame whose size differs from the one Open was given.
+		bool ValidateFrame(int frame_width, int frame_height) const;
+
 		// Encodes a packed frame as H.264 and hands it to the multiplexer.
 		bool EncodeH264(const void* pixels, int components);
 		bool EncodeMJPEG(const void* pixels, int components);
