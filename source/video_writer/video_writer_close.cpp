@@ -237,40 +237,40 @@ namespace qlm
 
 			std::fclose(impl->file);
 			impl->file = nullptr;
-			return;
 		}
-
-		// Patch the media data size, then append the index.
-		const uint64_t mdat_size = impl->mdat_payload_size + 8;
-		const uint8_t mdat_size_bytes[4] =
+		else // Motion-JPEG
 		{
-			static_cast<uint8_t>((mdat_size >> 24) & 0xFF),
-			static_cast<uint8_t>((mdat_size >> 16) & 0xFF),
-			static_cast<uint8_t>((mdat_size >> 8) & 0xFF),
-			static_cast<uint8_t>(mdat_size & 0xFF)
-		};
+			// Patch the media data size, then append the index.
+			const uint64_t mdat_size = impl->mdat_payload_size + 8;
+			const uint8_t mdat_size_bytes[4] =
+			{
+				static_cast<uint8_t>((mdat_size >> 24) & 0xFF),
+				static_cast<uint8_t>((mdat_size >> 16) & 0xFF),
+				static_cast<uint8_t>((mdat_size >> 8) & 0xFF),
+				static_cast<uint8_t>(mdat_size & 0xFF)
+			};
 
-		bool ok = FileSeekTo(impl->file, impl->mdat_size_position) &&
-				  std::fwrite(mdat_size_bytes, 1, 4, impl->file) == 4;
+			bool ok = FileSeekTo(impl->file, impl->mdat_size_position) && std::fwrite(mdat_size_bytes, 1, 4, impl->file) == 4;
 
-		MoovInfo info;
-		info.sample_sizes = &impl->sample_sizes;
-		info.width = impl->width;
-		info.height = impl->height;
-		info.frame_rate = impl->frame_rate;
-		info.chunk_offset = impl->mdat_payload_position;
+			MoovInfo info;
+			info.sample_sizes = &impl->sample_sizes;
+			info.width = impl->width;
+			info.height = impl->height;
+			info.frame_rate = impl->frame_rate;
+			info.chunk_offset = impl->mdat_payload_position;
 
-		const std::vector<uint8_t> moov = BuildMoov(info);
+			const std::vector<uint8_t> moov = BuildMoov(info);
 
-		// The media data is written sequentially, so the end of it is the end of the file.
-		const uint64_t end_of_media = impl->mdat_payload_position + impl->mdat_payload_size;
-		ok = ok && FileSeekTo(impl->file, static_cast<int64_t>(end_of_media));
-		ok = ok && std::fwrite(moov.data(), 1, moov.size(), impl->file) == moov.size();
+			// The media data is written sequentially, so the end of it is the end of the file.
+			const uint64_t end_of_media = impl->mdat_payload_position + impl->mdat_payload_size;
+			ok = ok && FileSeekTo(impl->file, static_cast<int64_t>(end_of_media));
+			ok = ok && std::fwrite(moov.data(), 1, moov.size(), impl->file) == moov.size();
 
-		if (!ok)
-			std::cerr << "Error: failed to finish writing the video file " << impl->file_name << "." << std::endl;
+			if (!ok)
+				std::cerr << "Error: failed to finish writing the video file " << impl->file_name << "." << std::endl;
 
-		std::fclose(impl->file);
-		impl->file = nullptr;
+			std::fclose(impl->file);
+			impl->file = nullptr;
+		}
 	}
 }

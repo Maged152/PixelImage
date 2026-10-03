@@ -75,18 +75,6 @@ namespace qlm
 			return MP4E_STATUS_OK;
 		}
 
-		std::FILE* OpenBinaryForWriting(const std::string& file_name)
-		{
-		#if defined(_MSC_VER)
-			std::FILE* file = nullptr;
-			if (fopen_s(&file, file_name.c_str(), "wb+") != 0)
-				return nullptr;
-			return file;
-		#else
-			return std::fopen(file_name.c_str(), "wb+");
-		#endif
-		}
-
 		// quality grows with the image quality, the quantizer shrinks with it: 10 is close
 		// to lossless, 51 is very rough. The linear map keeps both formats comparable.
 		int QualityToQuantizer(const int quality)
@@ -109,7 +97,7 @@ namespace qlm
 			return false;
 		}
 
-		impl->file = OpenBinaryForWriting(file_name);
+		impl->file = std::fopen(file_name.c_str(), "wb+");
 		if (impl->file == nullptr)
 		{
 			std::cerr << "Error: cannot open the video file " << file_name << " for writing." << std::endl;
