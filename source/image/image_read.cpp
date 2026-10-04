@@ -5,7 +5,7 @@
 namespace qlm
 {
 	template<ImageFormat frmt, pixel_t T>
-	bool Image<frmt, T>::LoadFromFile(const std::string& file_name)
+	bool Image<frmt, T>::Read(const std::string& file_name)
 	{
 		int w, h, n; // width, height, number of channels
 		T* img_data{ nullptr }; //  pointer to the data
@@ -74,9 +74,9 @@ namespace qlm
 		return true;
 	}
 
-	template bool Image<ImageFormat::GRAY, uint8_t>::LoadFromFile(const std::string&);
-	template bool Image<ImageFormat::RGB, uint8_t>::LoadFromFile(const std::string&);
-	template bool Image<ImageFormat::GRAY, int16_t>::LoadFromFile(const std::string&);
-	template bool Image<ImageFormat::RGB, int16_t>::LoadFromFile(const std::string&);
+	template bool Image<ImageFormat::GRAY, uint8_t>::Read(const std::string&);
+	template bool Image<ImageFormat::RGB, uint8_t>::Read(const std::string&);
+	template bool Image<ImageFormat::GRAY, int16_t>::Read(const std::string&);
+	template bool Image<ImageFormat::RGB, int16_t>::Read(const std::string&);
 }
 

@@ -269,9 +269,9 @@ namespace qlm
 			}
 		}
 
-		bool LoadFromFile(const std::string& file_name);
+		bool Read(const std::string& file_name);
 
-		bool SaveToFile(const std::string& file_name, bool alpha = true,int quality = 100);
+		bool Write(const std::string& file_name, bool alpha = true,int quality = 100);
 
 		int NumberOfChannels() const
 		{

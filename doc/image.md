@@ -2,7 +2,7 @@
 
 `Image<frmt, T>` owns a contiguous buffer of [`Pixel<frmt, T>`](pixel.md) and provides creation, pixel access, border handling and file I/O. `frmt` is an [`ImageFormat`](concepts.md#imageformat) and `T` is a [`pixel_t`](concepts.md#concepts) channel type.
 
-Sources: [`include/image.hpp`](../include/image.hpp) · [`source/LoadFromFile.cpp`](../source/LoadFromFile.cpp) · [`source/SaveToFile.cpp`](../source/SaveToFile.cpp)
+Sources: [`include/image.hpp`](../include/image.hpp) · [`source/Read.cpp`](../source/Read.cpp) · [`source/Write.cpp`](../source/Write.cpp)
 
 **On this page** — [Memory model](#memory-model) · [Public variables](#public-variables) · [Constructors](#constructors) · [Creating and filling](#creating-and-filling) · [Pixel access](#pixel-access) · [File I/O](#file-io) · [`NumberOfChannels`](#numerofchannels) · [Known limitations](#known-limitations)
 
@@ -205,10 +205,10 @@ dst.Copy(src);
 
 ## File I/O
 
-### `LoadFromFile`
+### `Read`
 
 ```cpp
-bool LoadFromFile(const std::string& file_name);
+bool Read(const std::string& file_name);
 ```
 
 Decodes the file with stb (`stbi_load` for `uint8_t`, `stbi_load_16` for `int16_t`, `stbi_loadf` for floating-point channels), then replaces this image's buffer with the decoded data.
@@ -229,16 +229,16 @@ Decodes the file with stb (`stbi_load` for `uint8_t`, `stbi_load_16` for `int16_
 
 ```cpp
 qlm::Image<qlm::ImageFormat::RGB, uint8_t> img;
-if (!img.LoadFromFile("photo.jpg"))
+if (!img.Read("photo.jpg"))
 {
     return -1;   // details already printed to std::cerr
 }
 ```
 
-### `SaveToFile`
+### `Write`
 
 ```cpp
-bool SaveToFile(const std::string& file_name, bool alpha = true, int quality = 100);
+bool Write(const std::string& file_name, bool alpha = true, int quality = 100);
 ```
 
 | Parameter | Description |
@@ -267,15 +267,15 @@ bool SaveToFile(const std::string& file_name, bool alpha = true, int quality = 1
 qlm::Image<qlm::ImageFormat::GRAY, uint8_t> img(256, 256);
 img.RandomInit(7);
 
-img.SaveToFile("noise.png");            // 2 components: gray + alpha
-img.SaveToFile("noise.png", false);     // 1 component
-img.SaveToFile("noise.pgm", false);     // PGM requires 1 component
-img.SaveToFile("noise.jpg", false, 90); // JPEG quality 90
+img.Write("noise.png");            // 2 components: gray + alpha
+img.Write("noise.png", false);     // 1 component
+img.Write("noise.pgm", false);     // PGM requires 1 component
+img.Write("noise.jpg", false, 90); // JPEG quality 90
 ```
 
 ### Supported instantiations
 
-`LoadFromFile` and `SaveToFile` are declared for every `Image<frmt, T>` but only **defined** for these four combinations. Any other combination fails at link time:
+`Read` and `Write` are declared for every `Image<frmt, T>` but only **defined** for these four combinations. Any other combination fails at link time:
 
 | | `uint8_t` | `int16_t` | other `T` |
 |---|---|---|---|
@@ -284,7 +284,7 @@ img.SaveToFile("noise.jpg", false, 90); // JPEG quality 90
 | `YCrCb`, `HSV`, `HLS` | ❌ | ❌ | ❌ |
 
 ```text
-undefined reference to `qlm::Image<(qlm::ImageFormat)3, unsigned char>::SaveToFile(...)'
+undefined reference to `qlm::Image<(qlm::ImageFormat)3, unsigned char>::Write(...)'
                       // (ImageFormat)3 == HSV
 ```
 
@@ -299,7 +299,7 @@ Returns the number of channels stored in `num_of_channels`. The value has two di
 | Created by | Reported value | Origin |
 |---|---|---|
 | Constructor, `Create`, or assignment | Format-derived: `GRAY` 2, `RGB` 4, `YCrCb` 3, `HSV`/`HLS` 4 | `SetNumChannels` |
-| `LoadFromFile` | The channel count reported by the file, e.g. `3` for a JPEG loaded into an `RGB` image | `stbi_load` output |
+| `Read` | The channel count reported by the file, e.g. `3` for a JPEG loaded into an `RGB` image | `stbi_load` output |
 
 > **Note** — the method is spelled `NumberOfChannels`, without the `b` in "Number". That is the actual API name.
 
@@ -309,13 +309,13 @@ Returns the number of channels stored in `num_of_channels`. The value has two di
 qlm::Image<qlm::ImageFormat::RGB, uint8_t> img(64, 64);
 img.NumberOfChannels();          // 4 (RGB + alpha)
 
-img.LoadFromFile("photo.jpg");  // a 3-channel JPEG
+img.Read("photo.jpg");  // a 3-channel JPEG
 img.NumberOfChannels();          // 3
 ```
 
 ## Known limitations
 
-- **File I/O is only instantiated for `GRAY`/`RGB` with `uint8_t`/`int16_t`.** Calling `LoadFromFile` or `SaveToFile` on any other combination compiles and then fails to link.
+- **File I/O is only instantiated for `GRAY`/`RGB` with `uint8_t`/`int16_t`.** Calling `Read` or `Write` on any other combination compiles and then fails to link.
 - **The stb writers are 8-bit oriented.** Saving an `int16_t` image writes 16-bit samples into containers that expect 8-bit ones, so the output is not meaningful. The source notes this explicitly (`// I think stb_write supports only U8 !`).
 - **`Copy` does not validate dimensions** and reads out of bounds when `in` is smaller than the destination.
 - **Index-based access does not understand stride.** `GetPixel(int)` and `SetPixel(int, ...)` bound-check against `width * height` and index the buffer directly, so they are only consistent for images without padding.

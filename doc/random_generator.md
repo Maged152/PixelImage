@@ -157,7 +157,7 @@ void RandomInit();
 
 **Notes**
 
-- The image must already be created — `Create(width, height)`, a constructor, or `LoadFromFile`. Otherwise the call is a **silent no-op**.
+- The image must already be created — `Create(width, height)`, a constructor, or `Read`. Otherwise the call is a **silent no-op**.
 - Only the `width` visible pixels of each row are drawn, so the number of engine draws does not depend on `stride`; with padded rows the padding keeps its previous value.
 - `random_alpha = false` (the default) leaves every pixel opaque.
 - Filling is deterministic for a given seed, range, `width`, `height` and `random_alpha`.
@@ -171,7 +171,7 @@ Reproducible noise — the same seed always produces the same image:
 ```cpp
 qlm::Image<qlm::ImageFormat::RGB, uint8_t> noise(256, 256);
 noise.RandomInit(42);
-noise.SaveToFile("noise.png", false);
+noise.Write("noise.png", false);
 ```
 
 A bounded range, for example a pastel tint:

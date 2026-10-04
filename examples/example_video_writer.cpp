@@ -20,25 +20,25 @@ int main(int argc, char* argv[])
 	using ImageRGB = qlm::Image<qlm::ImageFormat::RGB, uint8_t>;
 	ImageRGB image0, image1, image2, image3;
 
-	if (!image0.LoadFromFile(images_path + "image0.jpg"))
+	if (!image0.Read(images_path + "image0.jpg"))
 	{
 		std::cout << "Failed to read the image0 \n";
 		return -1;
 	}
 
-	if (!image1.LoadFromFile(images_path + "image1.jpg"))
+	if (!image1.Read(images_path + "image1.jpg"))
 	{
 		std::cout << "Failed to read the image1 \n";
 		return -1;
 	}
 
-	if (!image2.LoadFromFile(images_path + "image2.jpg"))
+	if (!image2.Read(images_path + "image2.jpg"))
 	{
 		std::cout << "Failed to read the image2 \n";
 		return -1;
 	}
 
-	if (!image3.LoadFromFile(images_path + "image3.jpg"))
+	if (!image3.Read(images_path + "image3.jpg"))
 	{
 		std::cout << "Failed to read the image3 \n";
 		return -1;

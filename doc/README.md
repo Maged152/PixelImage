@@ -22,7 +22,7 @@ int main()
 {
     // Load an image from disk
     qlm::Image<qlm::ImageFormat::RGB, uint8_t> img;
-    if (!img.LoadFromFile("input.jpg"))
+    if (!img.Read("input.jpg"))
     {
         std::cout << "Failed to read the image\n";
         return -1;
@@ -41,7 +41,7 @@ int main()
         }
     }
 
-    img.SaveToFile("output.png", false);
+    img.Write("output.png", false);
     return 0;
 }
 ```
@@ -51,7 +51,7 @@ To generate an image from scratch instead, create it and fill it with reproducib
 ```cpp
 qlm::Image<qlm::ImageFormat::RGB, uint8_t> noise(256, 256);
 noise.RandomInit(42);                  // same seed -> same image
-noise.SaveToFile("noise.png", false);
+noise.Write("noise.png", false);
 ```
 
 Building and consuming the library is covered in the [project README](../README.md#build--targets).
@@ -111,6 +111,6 @@ See [Video](video.md) for the container details, [example_video_writer](../examp
 | [Concepts and types](concepts.md) | `ImageFormat`, `BorderType`, `BorderMode`, `pixel_t`, `arithmetic_t`, `wider_t`, `signed_t`, `cast_t` |
 | [Pixel](pixel.md) | The `Pixel` interface shared by every format, plus the free pixel functions and operators |
 | [Pixel formats](pixel_formats.md) | The five `Pixel` specializations: channels, constructors, `Set` overloads |
-| [Image](image.md) | Memory model, constructors, pixel access, `Copy`, border handling, `LoadFromFile` / `SaveToFile` |
+| [Image](image.md) | Memory model, constructors, pixel access, `Copy`, border handling, `Read` / `Write` |
 | [Random generation](random_generator.md) | `RandomGenerator`, `RandomPixel`, `Image::RandomInit`, determinism |
 | [Video](video.md) | `VideoReader`, `VideoWriter`, the MP4 container, Motion-JPEG and H.264, frame timing |

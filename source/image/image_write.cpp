@@ -6,7 +6,7 @@
 namespace qlm
 {
 	template<ImageFormat frmt, pixel_t T>
-	bool Image<frmt, T>::SaveToFile(const std::string& file_name, bool alpha, int quality)
+	bool Image<frmt, T>::Write(const std::string& file_name, bool alpha, int quality)
 	{
 		// I think stb_write supports only U8 !
 
@@ -99,8 +99,8 @@ namespace qlm
 		return stb_status ? true : false;
 	}
 
-	template bool Image<ImageFormat::GRAY, uint8_t>::SaveToFile(const std::string&, bool , int);
-	template bool Image<ImageFormat::RGB, uint8_t>::SaveToFile(const std::string&, bool, int);
-	template bool Image<ImageFormat::GRAY, int16_t>::SaveToFile(const std::string&, bool, int);
-	template bool Image<ImageFormat::RGB, int16_t>::SaveToFile(const std::string&, bool, int);
+	template bool Image<ImageFormat::GRAY, uint8_t>::Write(const std::string&, bool , int);
+	template bool Image<ImageFormat::RGB, uint8_t>::Write(const std::string&, bool, int);
+	template bool Image<ImageFormat::GRAY, int16_t>::Write(const std::string&, bool, int);
+	template bool Image<ImageFormat::RGB, int16_t>::Write(const std::string&, bool, int);
 }

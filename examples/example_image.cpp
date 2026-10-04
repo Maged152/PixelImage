@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 
 	// load the image
 	qlm::Image<qlm::ImageFormat::RGB, uint8_t> in;
-	if (!in.LoadFromFile(in_file))
+	if (!in.Read(in_file))
 	{
 		std::cout << "Failed to read the image: " << in_file << "\n";
 		return -1;
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     }
 
     // Save the image
-    if (!in.SaveToFile(out_file, alpha))
+    if (!in.Write(out_file, alpha))
     {
         std::cout << "Failed to save the image: " << out_file << "\n";
         return -1;
