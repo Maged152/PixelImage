@@ -85,25 +85,22 @@ namespace qlm
 		if (!ValidateFrame(frame.Width(), frame.Height()))
 			return false;
 
-		if (frame.Stride() == frame.Width() * 3)
-		{
-			// The pixels are already tightly packed, so no copy is needed.
-			return EncodeFrame(frame.data, 3);
-		}
-
-		// stb_image_write expects tightly packed pixels, so a padded stride is not passed on.
+		// Image stores RGBA pixels while the encoders want tightly packed RGB,
+		// so the alpha channel is stripped here. Rows are read directly
+		// through the friend access to frame.data (no per-pixel bounds check).
 		impl->packed_pixels.resize(static_cast<size_t>(impl->width) * impl->height * 3);
 
+		const int stride = frame.Stride();
 		for (int y = 0; y < impl->height; y++)
 		{
+			const Pixel<ImageFormat::RGB, uint8_t>* row = frame.data + static_cast<size_t>(y) * stride;
+			uint8_t* dst = impl->packed_pixels.data() + static_cast<size_t>(y) * impl->width * 3;
+
 			for (int x = 0; x < impl->width; x++)
 			{
-				const Pixel<ImageFormat::RGB, uint8_t> pix = frame.GetPixel(x, y);
-				const size_t idx = (static_cast<size_t>(y) * impl->width + x) * 3;
-
-				impl->packed_pixels[idx] = pix.r;
-				impl->packed_pixels[idx + 1] = pix.g;
-				impl->packed_pixels[idx + 2] = pix.b;
+				dst[x * 3] = row[x].r;
+				dst[x * 3 + 1] = row[x].g;
+				dst[x * 3 + 2] = row[x].b;
 			}
 		}
 
@@ -115,21 +112,18 @@ namespace qlm
 		if (!ValidateFrame(frame.Width(), frame.Height()))
 			return false;
 
-		if (frame.Stride() == frame.Width())
-		{
-			// The pixels are already tightly packed, so no copy is needed.
-			return EncodeFrame(frame.data, 1);
-		}
-
+		// Image stores gray+alpha pairs while the encoders want packed luma,
+		// so the alpha channel is stripped here.
 		impl->packed_pixels.resize(static_cast<size_t>(impl->width) * impl->height);
 
+		const int stride = frame.Stride();
 		for (int y = 0; y < impl->height; y++)
 		{
+			const Pixel<ImageFormat::GRAY, uint8_t>* row = frame.data + static_cast<size_t>(y) * stride;
+			uint8_t* dst = impl->packed_pixels.data() + static_cast<size_t>(y) * impl->width;
+
 			for (int x = 0; x < impl->width; x++)
-			{
-				const Pixel<ImageFormat::GRAY, uint8_t> pix = frame.GetPixel(x, y);
-				impl->packed_pixels[y * impl->width + x] = pix.v;
-			}
+				dst[x] = row[x].v;
 		}
 
 		return EncodeFrame(impl->packed_pixels.data(), 1);

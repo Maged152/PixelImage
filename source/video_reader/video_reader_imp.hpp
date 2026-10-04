@@ -75,7 +75,7 @@ namespace qlm
 		// Converts a packed planar 4:2:0 frame into an RGB image. The H.264 writer converts its input
 		// to BT.601 limited range before it encodes it, so that is what is inverted here; chroma is
 		// taken from the chroma pixel the luma pixel belongs to.
-				inline void CopyPlanarToRgbImage(const std::vector<uint8_t>& pixels, const int width, const int height,
+		inline void CopyPlanarToRgbImage(const std::vector<uint8_t>& pixels, const int width, const int height,
 										Pixel<ImageFormat::RGB, uint8_t>* const dst, const int stride)
 		{
 			const int chroma_width = width / 2;
@@ -104,7 +104,7 @@ namespace qlm
 
 		// Converts a packed planar 4:2:0 frame into a grayscale image: its luma plane is the picture,
 		// and the chroma planes hold no brightness, so they are dropped.
-				inline void CopyPlanarToGrayImage(const std::vector<uint8_t>& pixels, const int width, const int height,
+		inline void CopyPlanarToGrayImage(const std::vector<uint8_t>& pixels, const int width, const int height,
 										Pixel<ImageFormat::GRAY, uint8_t>* const dst, const int stride)
 		{
 			for (int y = 0; y < height; y++)
@@ -162,7 +162,7 @@ namespace qlm
 		}
 
 		// Converts decoded sample pixels (1, 2, 3 or 4 channels) into an RGB image.
-				inline void CopyToRgbImage(const uint8_t* pixels, const int width, const int height, const int channels,
+		inline void CopyToRgbImage(const uint8_t* pixels, const int width, const int height, const int channels,
 									Pixel<ImageFormat::RGB, uint8_t>* const dst, const int stride)
 		{
 			for (int y = 0; y < height; y++)
@@ -186,7 +186,7 @@ namespace qlm
 		}
 
 		// Converts decoded sample pixels into a grayscale image.
-				inline void CopyToGrayImage(const uint8_t* pixels, const int width, const int height, const int channels,
+		inline void CopyToGrayImage(const uint8_t* pixels, const int width, const int height, const int channels,
 									Pixel<ImageFormat::GRAY, uint8_t>* const dst, const int stride)
 		{
 			for (int y = 0; y < height; y++)
