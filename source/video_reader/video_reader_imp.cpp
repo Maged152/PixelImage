@@ -136,7 +136,6 @@ namespace qlm
 		h264_annex_b.clear();
 		h264_decoded.clear();
 		h264 = false;
-		planar = false;
 		h264_next_sample = 0;
 		h264_frames_stored = 0;
 		h264_flushed = false;
@@ -198,7 +197,6 @@ namespace qlm
 		// The parameter sets went with the decoder that was dropped
 		return StartH264Decoder() && DecodeH264Headers();
 	}
-
 
 	// ------------------------------------------------------------------------------------------
 	// Builds the access unit the decoder is handed next. A NAL unit an MP4 track carries has no
@@ -359,11 +357,10 @@ namespace qlm
 		return FeedH264();
 	}
 
-
-	// Decodes the frame at frame_index of an H.264 track. The decoder decodes in order, so every
+	// Prepares the frame at frame_index of an H.264 track. The decoder decodes in order, so every
 	// sample up to the one that holds the frame is fed to it; the frames of the samples that come
 	// after that one stay in the queue, for the reads that follow.
-	bool VideoReader::Impl::DecodeH264Frame(const int frame_index)
+	const PlanarFrame* VideoReader::Impl::PrepareH264Frame(const int frame_index)
 	{
 		// A frame that lies before the oldest frame the queue holds can only be
 		// reached by decoding the track from its first sample again
@@ -372,7 +369,7 @@ namespace qlm
 			if (!RestartH264())
 			{
 				std::cerr << "Error: cannot decode the H.264 track again: " << H264StatusText(h264_status) << "." << std::endl;
-				return false;
+				return nullptr;
 			}
 		}
 
@@ -384,8 +381,8 @@ namespace qlm
 				{
 					if (h264_status != 0)
 						std::cerr << "Error: cannot decode video sample " << h264_next_sample << ": "
-								  << H264StatusText(h264_status) << "." << std::endl;
-					return false;
+						          << H264StatusText(h264_status) << "." << std::endl;
+					return nullptr;
 				}
 
 				h264_next_sample++;
@@ -400,20 +397,20 @@ namespace qlm
 				if (!FlushH264())
 				{
 					std::cerr << "Error: cannot flush the H.264 decoder: " << H264StatusText(h264_status) << "." << std::endl;
-					return false;
+					return nullptr;
 				}
 			}
 			else
 			{
 				std::cerr << "Error: the H.264 track ends before frame " << frame_index << "." << std::endl;
-				return false;
+				return nullptr;
 			}
 
 			if (!h264_convertible)
 			{
 				std::cerr << "Error: the H.264 track is not an 8-bit 4:2:0 stream, the only format VideoReader converts."
-						  << std::endl;
-				return false;
+				          << std::endl;
+				return nullptr;
 			}
 		}
 
@@ -424,16 +421,11 @@ namespace qlm
 		if (position >= h264_decoded.size())
 		{
 			std::cerr << "Error: cannot decode video frame " << frame_index << "." << std::endl;
-			return false;
+			return nullptr;
 		}
 
-		// The frame is copied out of the queue, which keeps it for the reads that follow
+		// The frame the caller wants, held by the queue that keeps it for the reads that follow
 		const PlanarFrame& frame = h264_decoded[position];
-		decoded = frame.pixels;
-		decoded_width = frame.width;
-		decoded_height = frame.height;
-		decoded_channels = 0;
-		planar = true;
 		width = frame.width;
 		height = frame.height;
 
@@ -444,7 +436,7 @@ namespace qlm
 		unsigned timestamp = 0;
 		unsigned sample_duration = 0;
 		MP4D_frame_offset(&demux, static_cast<unsigned>(track), static_cast<unsigned>(frame_index),
-						  &sample_bytes, &timestamp, &sample_duration);
+											&sample_bytes, &timestamp, &sample_duration);
 		time = timescale > 0 ? static_cast<double>(timestamp) / timescale : 0.0;
 
 		// Drop the frames up to the one that was just read: they are not needed
@@ -453,7 +445,7 @@ namespace qlm
 		while (h264_decoded.size() > 1 && DecodedFrameBase() < frame_index)
 			h264_decoded.pop_front();
 
-		return true;
+		return &frame;
 	}
 
 	// Index of the oldest frame the queue holds. The decoder hands its frames out in display order
@@ -462,23 +454,5 @@ namespace qlm
 	int VideoReader::Impl::DecodedFrameBase() const
 	{
 		return h264_frames_stored - static_cast<int>(h264_decoded.size());
-	}
-
-	// Stores the frame that was read last in `frame`, in whichever layout the track uses: pixels that
-	// stb_image decoded, or a packed planar 4:2:0 frame the H.264 decoder produced.
-	void VideoReader::Impl::StoreFrame(Image<ImageFormat::RGB, uint8_t>& frame) const
-	{
-		if (planar)
-			CopyPlanarToRgbImage(decoded, decoded_width, decoded_height, frame);
-		else
-			CopyToRgbImage(decoded, decoded_width, decoded_height, decoded_channels, frame);
-	}
-
-	void VideoReader::Impl::StoreFrame(Image<ImageFormat::GRAY, uint8_t>& frame) const
-	{
-		if (planar)
-			CopyPlanarToGrayImage(decoded, decoded_width, decoded_height, frame);
-		else
-			CopyToGrayImage(decoded, decoded_width, decoded_height, decoded_channels, frame);
 	}
 }

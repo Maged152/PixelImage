@@ -21,8 +21,9 @@ namespace qlm
 		Pixel<frmt, T> border_pixel{};
 	};
 
-	// Forward declaration of video writer class
+	// Forward declaration of video writer and reader classes
     class VideoWriter;
+	class VideoReader;
 
 	template<ImageFormat frmt, pixel_t T>
 	class Image
@@ -321,5 +322,6 @@ namespace qlm
 		}
 
 		friend class VideoWriter;
+		friend class VideoReader;
 	};	
 }

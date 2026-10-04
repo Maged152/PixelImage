@@ -62,10 +62,9 @@ namespace qlm
 
 	bool VideoReader::ReadFrame(Image<ImageFormat::RGB, uint8_t>& frame)
 	{
-		if (impl == nullptr || !DecodeFrame(impl->frame_index))
+		if (impl == nullptr || !DecodeFrame(impl->frame_index, frame))
 			return false;
 
-		impl->StoreFrame(frame);
 		impl->frame_index++;
 
 		return true;
@@ -73,10 +72,9 @@ namespace qlm
 
 	bool VideoReader::ReadFrame(Image<ImageFormat::GRAY, uint8_t>& frame)
 	{
-		if (impl == nullptr || !DecodeFrame(impl->frame_index))
+		if (impl == nullptr || !DecodeFrame(impl->frame_index, frame))
 			return false;
 
-		impl->StoreFrame(frame);
 		impl->frame_index++;
 
 		return true;
@@ -84,22 +82,12 @@ namespace qlm
 
 	bool VideoReader::ReadFrame(const int frame_index, Image<ImageFormat::RGB, uint8_t>& frame)
 	{
-		if (!DecodeFrame(frame_index))
-			return false;
-
-		impl->StoreFrame(frame);
-
-		return true;
+		return DecodeFrame(frame_index, frame);
 	}
 
 	bool VideoReader::ReadFrame(const int frame_index, Image<ImageFormat::GRAY, uint8_t>& frame)
 	{
-		if (!DecodeFrame(frame_index))
-			return false;
-
-		impl->StoreFrame(frame);
-
-		return true;
+		return DecodeFrame(frame_index, frame);
 	}
 
 	bool VideoReader::Seek(const int frame_index)

@@ -21,8 +21,9 @@ namespace qlm
 		struct Impl;
 		std::unique_ptr<Impl> impl;
 
-		// Fetches the sample, decodes it and stores the pixels in Impl.
-		bool DecodeFrame(int frame_index);
+		// Fetches the sample and decodes it straight into `frame`.
+		template <ImageFormat frmt>
+		bool DecodeFrame(int frame_index, Image<frmt, uint8_t>& frame);
 
 	public:
 		VideoReader();

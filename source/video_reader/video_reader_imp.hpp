@@ -75,12 +75,9 @@ namespace qlm
 		// Converts a packed planar 4:2:0 frame into an RGB image. The H.264 writer converts its input
 		// to BT.601 limited range before it encodes it, so that is what is inverted here; chroma is
 		// taken from the chroma pixel the luma pixel belongs to.
-		inline void CopyPlanarToRgbImage(const std::vector<uint8_t>& pixels, const int width, const int height,
-								  Image<ImageFormat::RGB, uint8_t>& frame)
+				inline void CopyPlanarToRgbImage(const std::vector<uint8_t>& pixels, const int width, const int height,
+										Pixel<ImageFormat::RGB, uint8_t>* const dst, const int stride)
 		{
-			if (frame.Width() != width || frame.Height() != height)
-				frame.Create(width, height);
-
 			const int chroma_width = width / 2;
 			const uint8_t* luma = pixels.data();
 			const uint8_t* blue = luma + static_cast<size_t>(width) * height;
@@ -99,23 +96,22 @@ namespace qlm
 					const int g = (298 * luma_value - 100 * blue_value - 208 * red_value + 128) >> 8;
 					const int b = (298 * luma_value + 516 * blue_value + 128) >> 8;
 
-					frame.SetPixel(x, y, Pixel<ImageFormat::RGB, uint8_t>(ClipToByte(r), ClipToByte(g), ClipToByte(b)));
+					dst[static_cast<size_t>(y) * stride + x] = Pixel<ImageFormat::RGB, uint8_t>(
+						ClipToByte(r), ClipToByte(g), ClipToByte(b));
 				}
 			}
 		}
 
 		// Converts a packed planar 4:2:0 frame into a grayscale image: its luma plane is the picture,
 		// and the chroma planes hold no brightness, so they are dropped.
-		inline void CopyPlanarToGrayImage(const std::vector<uint8_t>& pixels, const int width, const int height,
-								   Image<ImageFormat::GRAY, uint8_t>& frame)
+				inline void CopyPlanarToGrayImage(const std::vector<uint8_t>& pixels, const int width, const int height,
+										Pixel<ImageFormat::GRAY, uint8_t>* const dst, const int stride)
 		{
-			if (frame.Width() != width || frame.Height() != height)
-				frame.Create(width, height);
-
 			for (int y = 0; y < height; y++)
 			{
 				for (int x = 0; x < width; x++)
-					frame.SetPixel(x, y, Pixel<ImageFormat::GRAY, uint8_t>(pixels[static_cast<size_t>(y) * width + x]));
+					dst[static_cast<size_t>(y) * stride + x] =
+						Pixel<ImageFormat::GRAY, uint8_t>(pixels[static_cast<size_t>(y) * width + x]);
 			}
 		}
 
@@ -166,12 +162,9 @@ namespace qlm
 		}
 
 		// Converts decoded sample pixels (1, 2, 3 or 4 channels) into an RGB image.
-		inline void CopyToRgbImage(const std::vector<uint8_t>& pixels, int width, int height, int channels,
-							Image<ImageFormat::RGB, uint8_t>& frame)
+				inline void CopyToRgbImage(const uint8_t* pixels, const int width, const int height, const int channels,
+									Pixel<ImageFormat::RGB, uint8_t>* const dst, const int stride)
 		{
-			if (frame.Width() != width || frame.Height() != height)
-				frame.Create(width, height);
-
 			for (int y = 0; y < height; y++)
 			{
 				for (int x = 0; x < width; x++)
@@ -187,18 +180,15 @@ namespace qlm
 						b = pixels[idx + 2];
 					}
 
-					frame.SetPixel(x, y, Pixel<ImageFormat::RGB, uint8_t>(r, g, b));
+					dst[static_cast<size_t>(y) * stride + x] = Pixel<ImageFormat::RGB, uint8_t>(r, g, b);
 				}
 			}
 		}
 
 		// Converts decoded sample pixels into a grayscale image.
-		inline void CopyToGrayImage(const std::vector<uint8_t>& pixels, int width, int height, int channels,
-							 Image<ImageFormat::GRAY, uint8_t>& frame)
+				inline void CopyToGrayImage(const uint8_t* pixels, const int width, const int height, const int channels,
+									Pixel<ImageFormat::GRAY, uint8_t>* const dst, const int stride)
 		{
-			if (frame.Width() != width || frame.Height() != height)
-				frame.Create(width, height);
-
 			for (int y = 0; y < height; y++)
 			{
 				for (int x = 0; x < width; x++)
@@ -212,9 +202,31 @@ namespace qlm
 						v = static_cast<uint8_t>((pixels[idx] * 299 + pixels[idx + 1] * 587 + pixels[idx + 2] * 114) / 1000);
 					}
 
-					frame.SetPixel(x, y, Pixel<ImageFormat::GRAY, uint8_t>(v));
+					dst[static_cast<size_t>(y) * stride + x] = Pixel<ImageFormat::GRAY, uint8_t>(v);
 				}
 			}
+		}
+
+		// Writes a packed planar 4:2:0 frame the decoder produced into `dst`.
+		template <ImageFormat frmt>
+		inline void CopyPlanarToImage(const std::vector<uint8_t>& pixels, const int width, const int height,
+										Pixel<frmt, uint8_t>* const dst, const int stride)
+		{
+			if constexpr (frmt == ImageFormat::RGB)
+				CopyPlanarToRgbImage(pixels, width, height, dst, stride);
+			else
+				CopyPlanarToGrayImage(pixels, width, height, dst, stride);
+		}
+
+		// Writes pixels stb_image decoded (1 to 4 channels) into `dst`.
+		template <ImageFormat frmt>
+		inline void CopyPackedToImage(const uint8_t* pixels, const int width, const int height, const int channels,
+										Pixel<frmt, uint8_t>* const dst, const int stride)
+		{
+			if constexpr (frmt == ImageFormat::RGB)
+				CopyToRgbImage(pixels, width, height, channels, dst, stride);
+			else
+				CopyToGrayImage(pixels, width, height, channels, dst, stride);
 		}
 
 		// Text for the status a decoder call returned, used in the error messages.
@@ -222,7 +234,6 @@ namespace qlm
 		{
 			switch (status)
 			{
-				case dsErrorFree: return "the decoder reported no error";
 				case dsFramePending: return "the decoder needs more data before it can hand out a frame";
 				case dsRefLost: return "the reference picture the frame needs is missing";
 				case dsBitstreamError: return "the stream is not a valid H.264 stream";
@@ -257,16 +268,12 @@ namespace qlm
 	struct VideoReader::Impl
 	{
 		std::vector<uint8_t> file_data;
-		std::vector<uint8_t> decoded;     // pixel data of the frame read last
 		MemoryFile memory;                // token handed to minimp4, kept alive with the demuxer
 		MP4D_demux_t demux{};
 		bool demux_open = false;
 		int track = -1;
 		int width = 0;
 		int height = 0;
-		int decoded_width = 0;
-		int decoded_height = 0;
-		int decoded_channels = 0;
 		int frame_count = 0;
 		int frame_index = 0;
 		unsigned timescale = 0;
@@ -280,7 +287,6 @@ namespace qlm
 		// that come after the frame read last therefore wait here, so that reading forwards does not
 		// decode anything twice.
 		bool h264 = false;
-		bool planar = false;           // the pixels in `decoded` are a packed planar 4:2:0 frame
 		ISVCDecoder* h264_decoder = nullptr;
 		std::vector<uint8_t> h264_annex_b;  // the access unit that is being built, in Annex B form
 		std::deque<PlanarFrame> h264_decoded;
@@ -294,7 +300,8 @@ namespace qlm
 		bool OpenH264(size_t sample_bytes, const std::string& file_name);
 		void CloseH264();
 		bool DecodeH264Headers();
-		bool DecodeH264Frame(int frame_index);
+		const PlanarFrame* PrepareH264Frame(int frame_index);
+		bool DecodeMjpegSample(int frame_index, const uint8_t*& pixels, int& out_width, int& out_height, int& out_channels);
 		bool DecodeH264Sample(int sample_index);
 		void AppendH264Nalu(const uint8_t* begin, const uint8_t* end);
 		bool FeedH264();
@@ -305,8 +312,39 @@ namespace qlm
 		// Index of the frame at the front of the queue of decoded frames.
 		int DecodedFrameBase() const;
 
-		// Stores the frame that was read last, in whichever layout the track uses.
-		void StoreFrame(Image<ImageFormat::RGB, uint8_t>& frame) const;
-		void StoreFrame(Image<ImageFormat::GRAY, uint8_t>& frame) const;
 	};
+
+	template <ImageFormat frmt>
+	bool VideoReader::DecodeFrame(const int frame_index, Image<frmt, uint8_t>& frame)
+	{
+		if (!IsOpen() || frame_index < 0 || frame_index >= impl->frame_count)
+			return false;
+
+		if (impl->h264)
+		{
+			const PlanarFrame* planar = impl->PrepareH264Frame(frame_index);
+			if (planar == nullptr)
+				return false;
+
+			if (frame.Width() != planar->width || frame.Height() != planar->height)
+				frame.Create(planar->width, planar->height);
+
+			CopyPlanarToImage(planar->pixels, planar->width, planar->height, frame.data, frame.Stride());
+			return true;
+		}
+
+		const uint8_t* pixels = nullptr;
+		int width = 0;
+		int height = 0;
+		int channels = 0;
+		if (!impl->DecodeMjpegSample(frame_index, pixels, width, height, channels))
+			return false;
+
+		if (frame.Width() != width || frame.Height() != height)
+			frame.Create(width, height);
+
+		CopyPackedToImage(pixels, width, height, channels, frame.data, frame.Stride());
+		stbi_image_free(const_cast<uint8_t*>(pixels));
+		return true;
+	}
 }

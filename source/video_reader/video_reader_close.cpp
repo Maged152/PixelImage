@@ -2,12 +2,6 @@
 
 namespace qlm
 {
-	namespace
-	{
-		
-
-	}
-
 	void VideoReader::Close()
 	{
 		if (impl == nullptr)
@@ -27,14 +21,10 @@ namespace qlm
 		}
 
 		impl->file_data.clear();
-		impl->decoded.clear();
 		impl->memory = MemoryFile{};
 		impl->track = -1;
 		impl->width = 0;
 		impl->height = 0;
-		impl->decoded_width = 0;
-		impl->decoded_height = 0;
-		impl->decoded_channels = 0;
 		impl->frame_count = 0;
 		impl->frame_index = 0;
 		impl->timescale = 0;
