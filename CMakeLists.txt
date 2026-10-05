@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(PixelImage VERSION 0.0.1)
 
-List (APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+List (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(OpenH264)
 
 # Configuration
