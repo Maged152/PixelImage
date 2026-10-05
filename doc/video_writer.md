@@ -8,7 +8,7 @@
 
 Sources: [`include/video/video_writer.hpp`](../include/video/video_writer.hpp) · [`source/video_writer/`](../source/video_writer) · Runnable example: [`examples/example_video_writer.cpp`](../examples/example_video_writer.cpp)
 
-**On this page** — [Supported container](#supported-container) · [`VideoFormat`](#videofont) · [`VideoWriter`](#videowriter) · [`Open`](#open) · [`Close`](#close) · [`WriteFrame`](#writeframe) · [Example](#example) · [Known limitations](#known-limitations)
+**On this page** — [Supported container](#supported-container) · [`VideoFormat`](#videoformat) · [`VideoWriter`](#videowriter) · [`Open`](#open) · [`Close`](#close) · [`WriteFrame`](#writeframe) · [Example](#example) · [Known limitations](#known-limitations)
 
 ## Supported container
 

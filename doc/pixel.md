@@ -4,7 +4,7 @@
 
 The class has one specialization per format, so the set of channel members, constructors, and `Set` overloads differs between formats. This page documents the interface they all share and the free functions that operate on pixels; the exact per-format API is in [Pixel formats](pixel_formats.md).
 
-Source: [`include/pixel/pixel_common.hpp`](../include/pixel/pixel_common.hpp)
+Source: [`include/pixel/pixel_common.hpp`](../include/pixel/pixel_common.hpp) · Per-format specializations: [`pixel_GRAY.hpp`](../include/pixel/pixel_GRAY.hpp) · [`pixel_RGB.hpp`](../include/pixel/pixel_RGB.hpp) · [`pixel_HLS.hpp`](../include/pixel/pixel_HLS.hpp) · [`pixel_HSV.hpp`](../include/pixel/pixel_HSV.hpp) · [`pixel_YCrCb.hpp`](../include/pixel/pixel_YCrCb.hpp)
 
 **On this page** — [Common interface](#common-interface) · [Comparison operators](#comparison-operators) · [Cast operator](#cast-operator) · [Free functions](#free-functions) · [Arithmetic operators](#arithmetic-operators) · [Known limitations](#known-limitations)
 

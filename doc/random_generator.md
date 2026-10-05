@@ -10,7 +10,7 @@ Three pieces work together to fill images with pseudo-random values:
 
 The generator is a separate object rather than state hidden inside an image, so the same generator can be reused, copied to replay a sequence, or used directly as a standard generator functor.
 
-Source: [`include/random_generator.hpp`](../include/random_generator.hpp) · Runnable example: [`examples/example1.cpp`](../examples/example1.cpp)
+Source: [`include/random_generator.hpp`](../include/random_generator.hpp) · Runnable example: [`examples/example_image.cpp`](../examples/example_image.cpp)
 
 **On this page** — [`RandomGenerator<T>`](#randomgeneratort) · [`RandomPixel`](#randompixel) · [`Image::RandomInit`](#imagerandominit) · [Examples](#examples) · [Known limitations](#known-limitations)
 

@@ -4,7 +4,7 @@
 
 Sources: [`include/image.hpp`](../include/image.hpp) · [`source/Read.cpp`](../source/Read.cpp) · [`source/Write.cpp`](../source/Write.cpp)
 
-**On this page** — [Memory model](#memory-model) · [Public variables](#public-variables) · [Constructors](#constructors) · [Creating and filling](#creating-and-filling) · [Pixel access](#pixel-access) · [File I/O](#file-io) · [`NumberOfChannels`](#numerofchannels) · [Known limitations](#known-limitations)
+**On this page** — [Memory model](#memory-model) · [Data members](#data-members) · [Accessors](#accessors) · [Constructors](#constructors) · [Destructor](#destructor) · [Creating and filling](#creating-and-filling) · [Pixel access](#pixel-access) · [File I/O](#file-io) · [`NumberOfChannels`](#numerofchannels) · [Known limitations](#known-limitations)
 
 ## Memory model
 
@@ -29,15 +29,32 @@ A pixel at `(x, y)` is stored at index `y * stride + x`.
 
 > **Note** — the raw-pointer constructor takes **ownership** of the buffer. The destructor always calls `delete[] data`, so the buffer must come from `new Pixel<frmt, T>[...]` and must not be freed elsewhere.
 
-## Public variables
+## Data members
 
-| Variable | Type | Description |
+| Member | Type | Access | Description |
+|---|---|---|---|
+| `width` | `int` | **private** | Number of visible pixels per row |
+| `stride` | `int` | **private** | Pixels per row in memory (`>= width`) |
+| `height` | `int` | **private** | Number of rows |
+| `num_of_channels` | `int` | **private** | Channel count; see [`NumberOfChannels`](#numerofchannels) |
+| `data` | `Pixel<frmt, T>*` | **private** | Owning pointer to the pixel buffer |
+
+All data members are **private**. Read them through the [accessors](#accessors) below; a default-constructed image has `width = height = stride = 0` and `data = nullptr`.
+
+## Accessors
+
+| Method | Return type | Description |
 |---|---|---|
-| `width` | `int` | Number of visible pixels per row |
-| `stride` | `int` | Pixels per row in memory (`>= width`) |
-| `height` | `int` | Number of rows |
+| `int Width() const` | `int` | Number of visible pixels per row |
+| `int Height() const` | `int` | Number of rows |
+| `int Stride() const` | `int` | Pixels per row in memory (`>= Width()`) |
+| `int NumberOfChannels() const` | `int` | Channel count; see [`NumberOfChannels`](#numerofchannels) |
 
-`width`, `stride` and `height` are public and directly readable; a default-constructed image has all three set to `0`.
+```cpp
+qlm::Image<qlm::ImageFormat::RGB, uint8_t> img(640, 480);
+std::cout << img.Width() << "x" << img.Height();   // 640x480
+std::cout << " stride=" << img.Stride();            // 640
+```
 
 ## Constructors
 
@@ -48,6 +65,14 @@ A pixel at `(x, y)` is stored at index `y * stride + x`.
 | `Image(int width, int height, Pixel<frmt, T>* data, int _stride = 0)` | Adopts an existing buffer — **takes ownership** |
 | `Image(const Image<frmt, T>& other)` | Deep copy: allocates a new buffer and copies `stride * height` pixels |
 | `Image(Image<frmt, T>&& other) noexcept` | Moves the buffer and resets the source to empty |
+
+### Destructor
+
+```cpp
+~Image();
+```
+
+Releases the buffer with `delete[] data` and resets `width`, `height` and `stride` to `0`. If the image was default-constructed or already moved from, this is a no-op.
 
 ```cpp
 // Owning an image you create
@@ -211,7 +236,9 @@ dst.Copy(src);
 bool Read(const std::string& file_name);
 ```
 
-Decodes the file with stb (`stbi_load` for `uint8_t`, `stbi_load_16` for `int16_t`, `stbi_loadf` for floating-point channels), then replaces this image's buffer with the decoded data.
+Decodes the file with stb (`stbi_load` for `uint8_t`, `stbi_load_16` for `int16_t`), then replaces this image's buffer with the decoded data.
+
+> **Note** — although the template declaration exists for all `pixel_t` types, `Read` is only **instantiated** for `uint8_t` and `int16_t` with `GRAY` or `RGB`. Calling `Read` on a floating-point or other image compiles but fails at link time. See [Supported instantiations](#supported-instantiations).
 
 | Parameter | Description |
 |---|---|

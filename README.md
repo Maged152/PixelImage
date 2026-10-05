@@ -1,5 +1,9 @@
 # PixelImage
 
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![C++ Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
+![CMake](https://img.shields.io/badge/CMake-3.22%2B-blue.svg)
+
 PixelImage is a C++ wrapper around three C libraries - [stb](https://github.com/nothings/stb), [minimp4](https://github.com/lieff/minimp4) and [OpenH264](https://github.com/cisco/openh264) - that provides one easy C++ API for images and video. Read and write pictures as strongly-typed pixels, generate random images, and encode or decode MP4 video frame by frame, all through `qlm::Image`, `qlm::VideoReader` and `qlm::VideoWriter`.
 
 There are no external dependencies: stb and minimp4 are vendored, OpenH264 is fetched and built by CMake, and the library does all the work itself.
@@ -24,30 +28,43 @@ Seedable random images and pixels: `RandomGenerator<T>`, `RandomPixel` and `Imag
 
 Full documentation starts at the [documentation index](./doc/README.md).
 
-# Build & Targets
+## Build & Targets
 
-## Configure 
-    $ cmake -S <source_dir> -B <build_dir>
+### Configure
 
-You can use `presets`
+```bash
+cmake -S <source_dir> -B <build_dir>
+```
 
-    $ cmake -S <source_dir> --preset <preset_name>
+You can use `presets`:
 
-To know the existing presets
+```bash
+cmake -S <source_dir> --preset <preset_name>
+```
 
-    $ cmake -S <source_dir> --list-presets
+To know the existing presets:
 
-## Build
-    $ cmake --build <build_dir>
+```bash
+cmake -S <source_dir> --list-presets
+```
 
-## Install
-    $ cmake --install <build_dir> --prefix <install_dir>
+### Build
 
-# Testing
+```bash
+cmake --build <build_dir>
+```
+
+### Install
+
+```bash
+cmake --install <build_dir> --prefix <install_dir>
+```
+
+## Testing
 
 Each example is tested with a golden-file check, driven by CTest.
 
-## How it works
+### How it works
 
 For every example, one test (`test_<example>`) does the following:
 
@@ -64,7 +81,7 @@ For every example, one test (`test_<example>`) does the following:
 | `test_example_video_writer` | `images_slide_show.mp4` |
 | `test_example_video_reader` | `bright_car_30fps.mp4`  |
 
-## Running the tests
+### Running the tests
 
 Tests do not build anything, so build the examples first:
 
@@ -91,7 +108,7 @@ Notes:
 - With Visual Studio or Xcode, add `-C Debug` (or `Release`).
 - Add `-V` to always show output, `-j4` to run in parallel.
 
-## Updating the goldens
+### Updating the goldens
 
 When an output changes intentionally:
 
@@ -104,7 +121,7 @@ git add tests/expected && git commit
 This runs every example and overwrites its golden in `tests/expected/`.
 It prints the size and SHA256 of each updated file.
 
-## Debugging a failure
+### Debugging a failure
 
 - Fresh outputs are in `<build_dir>/test_output/<example>/`.
 - A mismatch prints the actual and expected SHA256 and size.
@@ -112,15 +129,15 @@ It prints the size and SHA256 of each updated file.
   versions (encoder version strings, timestamps, threading). If tests pass
   locally but fail in CI, check determinism first.
 
-# Acknowledgments
+## Acknowledgments
 [stb](https://github.com/nothings/stb): the image reading and writing library behind `Image::Read` and `Image::Write`.
 
 [minimp4](https://github.com/lieff/minimp4): the MP4 muxer and demuxer behind `VideoWriter` and `VideoReader`.
 
 [OpenH264](https://github.com/cisco/openh264): the H.264 encoder and decoder used for `VideoFormat::MP4_H264`.
 
-# Contributing
+## Contributing
 Contributions are welcome! Please open an issue or submit a pull request on GitHub.
 
-# License
+## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

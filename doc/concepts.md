@@ -2,7 +2,7 @@
 
 The vocabulary types used across the library: image formats, border handling, and the concepts and type traits that constrain and convert channel types.
 
-Source: [`include/pixel/pixel_common.hpp`](../include/pixel/pixel_common.hpp)
+Source: [`include/pixel/pixel_common.hpp`](../include/pixel/pixel_common.hpp) · [`include/image.hpp`](../include/image.hpp) (for `BorderType` and `BorderMode`)
 
 **On this page** — [`ImageFormat`](#imageformat) · [`BorderType`](#bordertype) · [`BorderMode`](#bordermode) · [Concepts](#concepts) · [Type traits](#type-traits)
 
