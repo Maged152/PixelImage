@@ -313,6 +313,55 @@ img.Read("photo.jpg");  // a 3-channel JPEG
 img.NumberOfChannels();          // 3
 ```
 
+## Examples
+
+Load an image, invert every pixel, and save the result:
+
+```cpp
+#include <PixelImage.hpp>
+#include <iostream>
+
+int main()
+{
+    qlm::Image<qlm::ImageFormat::RGB, uint8_t> img;
+    if (!img.Read("input.jpg"))
+    {
+        std::cerr << "Failed to read the image\n";
+        return 1;
+    }
+
+    for (int y = 0; y < img.Height(); y++)
+    {
+        for (int x = 0; x < img.Width(); x++)
+        {
+            const auto pix = img.GetPixel(x, y);
+            img.SetPixel(x, y, qlm::Pixel<qlm::ImageFormat::RGB, uint8_t>(
+                static_cast<uint8_t>(255 - pix.r),
+                static_cast<uint8_t>(255 - pix.g),
+                static_cast<uint8_t>(255 - pix.b)));
+        }
+    }
+
+    if (!img.Write("output.jpg", false))
+    {
+        std::cerr << "Failed to save the image\n";
+        return 1;
+    }
+
+    return 0;
+}
+```
+
+Create an image from scratch with reproducible random pixels instead:
+
+```cpp
+qlm::Image<qlm::ImageFormat::RGB, uint8_t> noise(256, 256);
+noise.RandomInit(42);                  // same seed -> same image
+noise.Write("noise.png", false);
+```
+
+The runnable version of this program is [`examples/example_image.cpp`](../examples/example_image.cpp); the tests build it and check its output byte for byte (see [Testing](../README.md#testing)).
+
 ## Known limitations
 
 - **File I/O is only instantiated for `GRAY`/`RGB` with `uint8_t`/`int16_t`.** Calling `Read` or `Write` on any other combination compiles and then fails to link.

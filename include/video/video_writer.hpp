@@ -12,7 +12,7 @@ namespace qlm
 	// Frames are encoded with stb_image_write (JPEG) and muxed into an MP4 container,
 	// which means the output is playable by FFmpeg based players, VLC, mpv and
 	// QuickTime, but not by web browsers. There is no inter-frame compression and no
-	// audio track; see doc/video.md for the details.
+	// audio track; see doc/video_writer.md for the details.
 	//
 	// A VideoWriter holds an open file between Open and Close, so it is movable but
 	// not copyable.
@@ -48,7 +48,7 @@ namespace qlm
 		// Opens file_name and prepares a video track of frame_width x frame_height.
 		// frame_rate is the number of frames per second (an integer, e.g. 24, 25, 30, 60).
 		// quality is 1 (worst) to 100 (best). It is the JPEG quality for MP4_MJPEG and is
-		// mapped onto the H.264 quantizer for MP4_H264 (see doc/video.md for the table).
+		// mapped onto the H.264 quantizer for MP4_H264 (see doc/video_writer.md for the table).
 		//
 		// MP4_H264 requires frame_width and frame_height to be even and at least 16, and at
 		// most 9437184 pixels in the frame; the encoder codes whole macroblocks and records

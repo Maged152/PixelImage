@@ -166,6 +166,38 @@ See [`RandomInit`](image.md#randominit) in the image documentation for the same 
 
 ## Examples
 
+A complete program - two reproducible noise images from one seed:
+
+```cpp
+#include <PixelImage.hpp>
+#include <iostream>
+
+int main()
+{
+    // Same seed always produces the same image
+    qlm::Image<qlm::ImageFormat::RGB, uint8_t> noise(256, 256);
+    noise.RandomInit(42);
+    if (!noise.Write("noise.png", false))
+    {
+        std::cerr << "Failed to save the image\n";
+        return 1;
+    }
+
+    // One generator reused keeps a single reproducible stream
+    qlm::RandomGenerator<uint8_t> gen(7, 180, 255);   // pastel range
+    qlm::Image<qlm::ImageFormat::RGB, uint8_t> first(64, 64);
+    qlm::Image<qlm::ImageFormat::RGB, uint8_t> second(64, 64);
+    first.RandomInit(gen);
+    second.RandomInit(gen);     // continues the same stream
+
+    first.Write("first.png", false);
+    second.Write("second.png", false);
+    return 0;
+}
+```
+
+Smaller, focused examples:
+
 Reproducible noise — the same seed always produces the same image:
 
 ```cpp

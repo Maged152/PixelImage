@@ -1,57 +1,28 @@
 # PixelImage
-PixelImage is a C++ wrapper for the [stb](https://github.com/nothings/stb) library, designed to simplify image processing tasks. With PixelImage, you can easily read, write, and manipulate images while accessing internal pixels through intuitive methods.
+
+PixelImage is a C++ wrapper around three C libraries - [stb](https://github.com/nothings/stb), [minimp4](https://github.com/lieff/minimp4) and [OpenH264](https://github.com/cisco/openh264) - that provides one easy C++ API for images and video. Read and write pictures as strongly-typed pixels, generate random images, and encode or decode MP4 video frame by frame, all through `qlm::Image`, `qlm::VideoReader` and `qlm::VideoWriter`.
+
+There are no external dependencies: stb and minimp4 are vendored, OpenH264 is fetched and built by CMake, and the library does all the work itself.
 
 ## Features
-- `Image I/O`: Read and write images in popular formats (JPEG, PNG, BMP, PGM).
 
-- `Pixel Access`: Easily access and modify individual pixels.
+### Image
 
-- `Image Formats`: Supports grayscale, RGB, and other formats.
+Read, write and manipulate images (JPEG, PNG, BMP, PGM) as `Image<Format, T>` - a 2D array of strongly-typed `Pixel` values with GRAY, RGB, YCrCb, HSV and HLS formats, pixel access, alpha handling and borders. See the [image documentation](./doc/image.md).
 
-- `Random Initialization`: Seedable random image and pixel generation (`RandomGenerator`, `RandomPixel`, `Image::RandomInit`).
+### Random generation
 
-- `Video I/O`: Write and read MP4 video (`VideoWriter`, `VideoReader`) frame by frame, as H.264 or Motion-JPEG.
+Seedable random images and pixels: `RandomGenerator<T>`, `RandomPixel` and `Image::RandomInit` fill any image reproducibly from a seed. See the [random generation documentation](./doc/random_generator.md).
 
-- `Alpha Channel Handling`: Automatically detects and handles alpha channels.
+### Read video
 
-- `Simple API`: Designed for ease of use while maintaining flexibility.
+`VideoReader` demuxes MP4 files and decodes every frame - H.264 or Motion-JPEG - with sequential and random access, seeking and frame timing. See the [video reading documentation](./doc/video_reader.md).
 
-# Example
-Here’s a quick example to demonstrate how to use PixelImage:
+### Write video
 
-```c++
-#include "image.hpp"
-#include <iostream>
+`VideoWriter` encodes frames as H.264 (the default) or Motion-JPEG and muxes them into an MP4 container, frame by frame. See the [video writing documentation](./doc/video_writer.md).
 
-int main() 
-{
-	std::string file_name = "image.jpg";
-	// load the image
-	qlm::Image<qlm::ImageFormat::RGB, uint8_t> in;
-	if (!in.Read(file_name))
-	{
-		std::cout << "Failed to read the image\n";
-		return -1;
-	}
-    
-	// Check alpha component
-    bool alpha = (in.NumberOfChannels() == 4);
-
-    /*
-         Perform any operations on the image
-    */
-
-    // Save the image
-    if (!in.Write("output.jpg", alpha))
-    {
-        std::cout << "Failed to save the image\n";
-        return -1;
-    }
-
-    return 0;
-}
-```
-For more detailed information, check out the [documentation](./doc/README.md).
+Full documentation starts at the [documentation index](./doc/README.md).
 
 # Build & Targets
 
@@ -140,17 +111,13 @@ It prints the size and SHA256 of each updated file.
 - Byte-exact hashes of media files can differ across machines or library
   versions (encoder version strings, timestamps, threading). If tests pass
   locally but fail in CI, check determinism first.
-## Debugging a failure
-
-- Fresh outputs are in `build/test_output/<example>/`.
-- A mismatch prints both hashes. Compare the actual and expected files
-  directly to see what changed.
-- Byte-exact hashes of media files can differ across machines or library
-  versions (encoder version strings, timestamps, threading). If tests pass
-  locally but fail in CI, look at determinism first.
 
 # Acknowledgments
-[stb](https://github.com/nothings/stb): For providing an excellent header-only library for image I/O.
+[stb](https://github.com/nothings/stb): the image reading and writing library behind `Image::Read` and `Image::Write`.
+
+[minimp4](https://github.com/lieff/minimp4): the MP4 muxer and demuxer behind `VideoWriter` and `VideoReader`.
+
+[OpenH264](https://github.com/cisco/openh264): the H.264 encoder and decoder used for `VideoFormat::MP4_H264`.
 
 # Contributing
 Contributions are welcome! Please open an issue or submit a pull request on GitHub.

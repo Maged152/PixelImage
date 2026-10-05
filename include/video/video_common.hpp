@@ -14,7 +14,7 @@ namespace qlm
 	//             and muxed by the vendored minimp4 multiplexer, and read back by the
 	//             OpenH264 decoder, so the files are far smaller than Motion-JPEG files
 	//             of the same clip, at the price of a lossy inter-frame codec. See
-	//             doc/video.md for the details, including the frame size rule and how
+	//             doc/video_writer.md for the details, including the frame size rule and how
 	//             quality maps onto the H.264 quantizer.
 	enum class VideoFormat
 	{

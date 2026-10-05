@@ -1,6 +1,6 @@
 # PixelImage Documentation
 
-A thin, type-safe wrapper over [stb](https://github.com/nothings/stb) `stb_image` / `stb_image_write` that exposes image data as a 2D array of strongly-typed pixels.
+PixelImage is a C++ wrapper around three C libraries - [stb](https://github.com/nothings/stb) for image I/O, [minimp4](https://github.com/lieff/minimp4) for the MP4 container and [OpenH264](https://github.com/cisco/openh264) for H.264 - that exposes image data as a 2D array of strongly-typed pixels and video as frames read and written one at a time. Users only ever see the `qlm` API; the wrappers do all the work.
 
 Everything lives in the `qlm` namespace.
 
@@ -10,7 +10,7 @@ Everything lives in the `qlm` namespace.
 
 - A C++20 compiler (the library uses concepts, `if constexpr`, and constrained templates).
 - CMake 3.22 or newer to build.
-- No external dependencies — stb is vendored under `dependencies/stb`.
+- No external dependencies - stb and minimp4 are vendored under `dependencies/`, OpenH264 is fetched and built automatically by CMake.
 
 ## Quick start
 
@@ -102,7 +102,7 @@ Videos are read and written frame by frame. `VideoWriter` encodes H.264 (the def
 | `uint8_t` | ✅ | ✅ |
 | other `T` | ❌ link error | ❌ link error |
 
-See [Video](video.md) for the container details, [example_video_writer](../examples/example_video_writer.cpp) for a slideshow built from images, and [example_video_reader](../examples/example_video_reader.cpp) for reading a video back and writing the frames after processing them.
+See [Video writing](video_writer.md) and [Video reading](video_reader.md) for the container details.
 
 ## Documentation
 
@@ -113,4 +113,5 @@ See [Video](video.md) for the container details, [example_video_writer](../examp
 | [Pixel formats](pixel_formats.md) | The five `Pixel` specializations: channels, constructors, `Set` overloads |
 | [Image](image.md) | Memory model, constructors, pixel access, `Copy`, border handling, `Read` / `Write` |
 | [Random generation](random_generator.md) | `RandomGenerator`, `RandomPixel`, `Image::RandomInit`, determinism |
-| [Video](video.md) | `VideoReader`, `VideoWriter`, the MP4 container, Motion-JPEG and H.264, frame timing |
+| [Video writing](video_writer.md) | `VideoWriter`, `VideoFormat`, MP4 muxing, Motion-JPEG and H.264, frame timing |
+| [Video reading](video_reader.md) | `VideoReader`, MP4 demuxing, sequential and random access, frame timing |
