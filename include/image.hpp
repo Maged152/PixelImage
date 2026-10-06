@@ -32,6 +32,7 @@ namespace qlm
 		int num_of_channels;
 		Pixel<frmt, T>* data;
 
+	public:
 		int width;
 		int stride;
 		int height;

@@ -33,9 +33,9 @@ A pixel at `(x, y)` is stored at index `y * stride + x`.
 
 | Member | Type | Access | Description |
 |---|---|---|---|
-| `width` | `int` | **private** | Number of visible pixels per row |
-| `stride` | `int` | **private** | Pixels per row in memory (`>= width`) |
-| `height` | `int` | **private** | Number of rows |
+| `width` | `int` | **public** | Number of visible pixels per row |
+| `stride` | `int` | **public** | Pixels per row in memory (`>= width`) |
+| `height` | `int` | **public** | Number of rows |
 | `num_of_channels` | `int` | **private** | Channel count; see [`NumberOfChannels`](#numerofchannels) |
 | `data` | `Pixel<frmt, T>*` | **private** | Owning pointer to the pixel buffer |
 
